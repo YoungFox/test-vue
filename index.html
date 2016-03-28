@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>test</title>
+</head>
+<body>
+	
+	<script src="vue.js"></script>
+	<script src="http://libs.baidu.com/jquery/1.9.0/jquery.js"></script>
+	<script>
+		var tpl = '<div id="app">' +
+			'<p @click="double">{{message}}</p>' +
+			'<button v-on:click="reverse">颠倒{{text}}</button>' +
+			'</div>'
+		$('body').append(tpl);
+		var d = {
+			message: 'Hello world!',
+			text: '@@@@@@@@'
+		};
+		new Vue({
+			el: '#app',
+			data: d,
+			methods: {
+				reverse: function() {
+					this.message = this.message.split('').reverse().join('');
+				},
+				double: function() {
+					this.message += this.message;
+				}
+			}
+		})
+	</script>
+</body>
+</html>
