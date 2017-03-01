@@ -31,3 +31,15 @@ vm1.$watch('a',function(newVal, oldVal){
 	console.log(newVal);
 	console.log(oldVal);
 })
+
+var vm2 = new Vue({
+	el: '#example2',
+	data:{
+		message: 'Hello'
+	},
+	computed:{
+		reversedMessage: function (){
+			return this.message.split('').reverse().join('');
+		}
+	}
+});
