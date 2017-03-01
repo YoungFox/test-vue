@@ -43,3 +43,24 @@ var vm2 = new Vue({
 		}
 	}
 });
+
+// computed getter setter
+var vm3 = new Vue({
+  el: '#demo',
+  data: {
+    firstName: 'Foo',
+    lastName: 'Bar'
+  },
+  computed: {
+    fullName: {
+    	get: function (){
+      		return this.firstName + ' ' + this.lastName
+    	},
+    	set: function (newValue){
+    		var name = newValue.split(' ');
+    		this.firstName = name[0];
+    		this.lastName = name[name.length - 1];
+    	}
+    }
+  }
+})
