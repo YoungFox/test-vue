@@ -63,4 +63,16 @@ var vm3 = new Vue({
     	}
     }
   }
-})
+});
+
+var vm4 = new Vue({
+	el: '#demo1',
+	data: {
+		classObject:{
+			active: true,
+			"text-danger": false
+		},
+	  isActive: true,
+	  hasError: false
+	}
+});
