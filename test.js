@@ -76,3 +76,11 @@ var vm4 = new Vue({
 	  hasError: false
 	}
 });
+
+Vue.component('my-component',{
+	template: '<div>一个自定义组件！！！！！</div>'
+});
+
+new Vue({
+	el: '#example-component'
+});
