@@ -1,6 +1,7 @@
 // @flow
 
 import { mergeOptions } from '../util/index';
+import { initLifecycle } from './lifecycle.js';
 
 export function initMixin(Vue: Class<Component>) {
     Vue.prototype._init = function (options: Object) {
@@ -12,5 +13,8 @@ export function initMixin(Vue: Class<Component>) {
 
         console.log(vm.$options);
         vm._self = vm;
+        
+
+        initLifecycle(vm);
     };
 }
