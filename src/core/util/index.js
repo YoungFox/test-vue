@@ -1,3 +1,3 @@
-import warn from './debug'
+import {warn} from './debug';
 
 export {warn};

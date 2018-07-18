@@ -1,9 +1,11 @@
 import {warn} from 'util/index'
 
 function Vue(options) {
-	if(process.env !== 'production' && !(this instanceof Vue)){
-		console.log('Vue is a constructor and should be called by the `new` keyword');
-	}
+	if (process.env.NODE_ENV !== 'production' &&
+    !(this instanceof Vue)
+  ) {
+    warn('Vue is a constructor and should be called with the `new` keyword')
+  }
 
 	// console.log(this instanceof Vue);
 }

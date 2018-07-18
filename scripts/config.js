@@ -1,6 +1,7 @@
 const path = require('path');
 const rollupAlias = require('rollup-plugin-alias');
 const flow = require('rollup-plugin-flow-no-whitespace');
+const replace = require('rollup-plugin-replace')
 const aliasDefault = require('./alias-default.js');
 
 
@@ -25,7 +26,9 @@ function genConfig(name) {
 			banner: '/**vue**/',
 			name: 'Vue'
 		},
-		plugins: [flow(), rollupAlias(aliasDefault)]
+		plugins: [flow(), rollupAlias(aliasDefault), replace({
+			'process.env.NODE_ENV': "'development'"
+		})]
 	}
 
 	return config;

@@ -1,3 +1,3 @@
 // @flow
 
-export function noop(a: Number) {}
+export function noop(a?: any, b?: any, c?: any) {}

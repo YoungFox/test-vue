@@ -1,6 +1,8 @@
 // @flow
-import {noop} from 'shared/util'
+import {noop} from 'shared/util';
 
-noop(00001234);
+export let warn = noop;
 
-export default {}
+warn = (msg: string) => {
+	console.log(`[Vue warn]:${msg}`);
+};
