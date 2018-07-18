@@ -1,5 +1,3 @@
-import xx from './instance/index'
-
-
+import xx from './instance/index';
 
 export default xx;
