@@ -13,7 +13,7 @@ const normalizeEvent = (name: string): {
     const once = name.charAt(0) === '~';
     name = once ? name.slice(1) : name;
     const capture = name.charAt(0) === '!';
-    name = capture ? name.slice(1): name;
+    name = capture ? name.slice(1) : name;
 
     return {
         name,
@@ -31,5 +31,7 @@ export function updateListeners(on: Object, oldOn: Object, add: Function, remove
         old = oldOn[name];
 
         event = normalizeEvent(name);
+
+        add(event.name, cur, event.once, event.capture, event.passive, event.params);
     }
 }

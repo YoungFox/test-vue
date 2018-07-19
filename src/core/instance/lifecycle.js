@@ -22,3 +22,18 @@ export function initLifecycle(vm: Component) {
     vm._isDestroyed = false;
     vm._isBeginDestroyed = false;
 }
+
+export function callHook(vm, hook){
+    const handlers = vm.$options[hook];
+    if(handlers){
+        let h;
+        for(h of handlers.values()){
+            try{
+                h.call(vm);
+            }catch(e){
+                console.log(e);
+            }
+        }
+    }
+    // debugger;
+}

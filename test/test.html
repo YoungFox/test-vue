@@ -7,7 +7,9 @@
 </head>
 <body>
 	<script>
-		new Vue({a:1111});
+		var vue = new Vue({a:1111,
+			'beforeCreate': [function (){console.log('beforeCreate');}]
+		});
 		// console.log(new Vue() instanceof Vue);
 		// console.log(Vue);
 		
