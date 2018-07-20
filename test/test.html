@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<script src="../dist/vue.js"></script>
+</head>
+
+<body>
+	<script>
+		var vue = new Vue({
+			a: 1111,
+			'beforeCreate': [function () { console.log('beforeCreate'); }],
+			'created': ["function () { console.log('created'); }"],
+			'props':{a:'1234'}
+		});
+		// console.log(new Vue() instanceof Vue);
+		// console.log(Vue);
+
+	</script>
+</body>
+
+</html>
