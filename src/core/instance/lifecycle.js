@@ -1,4 +1,6 @@
 // @flow
+import {logError} from '../util/error';
+
 export function initLifecycle(vm: Component) {
     let options = vm.$options;
 
@@ -31,7 +33,8 @@ export function callHook(vm, hook){
             try{
                 h.call(vm);
             }catch(e){
-                console.log(e);
+                // console.log(e);
+                logError(e, vm, `${hook} hook`);
             }
         }
     }

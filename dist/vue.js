@@ -25,6 +25,8 @@
         return toLowerCase ? key => map[key.toLowerCase()] : key => map[key];
     }
 
+    const emptyObject = Object.freeze({});
+
     // 
 
     let warn = noop;
@@ -89,6 +91,15 @@
     'content,element,shadow,template,blockquote,iframe,tfoot');
 
     // 
+
+    function logError(err, vm, info) {
+        {
+            warn(`Error in ${info}: "${err.toString()}"`, vm);
+        }
+    }
+
+    // 
+
     function initLifecycle(vm) {
         let options = vm.$options;
 
@@ -121,7 +132,8 @@
                 try{
                     h.call(vm);
                 }catch(e){
-                    console.log(e);
+                    // console.log(e);
+                    logError(e, vm, `${hook} hook`);
                 }
             }
         }
@@ -222,8 +234,75 @@
         return vnode;
     }
 
-    //  
+    // 
 
+    class Dep{
+
+        constructor(){
+            this.subs = [];
+        }
+        depend(){
+            if(Dep.target){
+                this.target.addDep(this);
+            }
+        }
+
+
+        notify(){
+            let watcher;
+            for(watcher of this.subs){
+                watcher.update();
+            }
+        }
+    }
+
+    // 
+
+    function defineReactive(obj, key, val, customSetter) {
+        const dep = new Dep;
+
+        const property = Object.getOwnPropertyDescriptor(obj, key);
+
+        if (property && property.configurable === false) {
+            return;
+        }
+
+        const getter = property && property.get;
+        const setter = property && property.set;
+
+        Object.defineProperty(obj, key, {
+            enumerable: true,
+            configurable: true,
+            get: function () {
+                const value = getter ? getter.call(obj) : val;
+                if (Dep.target) {
+                    dep.depend();
+                }
+                
+                return value;
+            },
+            set: function (newVal) {
+                const value = getter ? getter.call(obj) : val;
+                if (value === newVal) {
+                    return;
+                }
+
+                if (customSetter) {
+                    customSetter();
+                }
+
+                if (setter) {
+                    setter.call(obj);
+                } else {
+                    val = newVal;
+                }
+
+                dep.notify();
+            }
+        });
+    }
+
+    //  
 
     function initRender(vm){
         vm._vnode = null; //子树的根
@@ -232,8 +311,43 @@
         const options = vm.$options;
         const parentVnode = vm.$vnode = options._parentVnode;
         const renderContext = parentVnode && parentVnode.context;
+        // createElement();
+        vm._c = createElement();
 
-        createElement();
+
+        defineReactive(vm, '$attr', emptyObject ,function (){
+            warn('$attr是只读属性');
+        });
+        // vm.
+    }
+
+    // 
+
+
+    function initState(vm) {
+        vm._watchers = [];
+        const options = vm.$options;
+
+        if (options.props) initProps(vm, options.props);
+    }
+
+    function initProps(vm, propsOptions) {
+        const propsData = vm.$options.propsData || {};
+
+        const props = vm._props = {};
+
+        const keys = vm.$options._propKeys = [];
+
+        for (let key in propsOptions) {
+            keys.push(key);
+
+            var value = propsOptions[key];
+
+            defineReactive(props, key, value, function () {
+                console.log('observe props');
+            });
+        }
+
     }
 
     // 
@@ -253,6 +367,8 @@
             initEvents(vm);
             initRender(vm);
             callHook(vm, 'beforeCreate');
+            initState(vm);
+            callHook(vm, 'created');
         };
     }
 

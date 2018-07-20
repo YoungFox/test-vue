@@ -17,3 +17,5 @@ export function makeMap(str: string, toLowerCase: boolean): Function {
 
     return toLowerCase ? key => map[key.toLowerCase()] : key => map[key];
 }
+
+export const emptyObject = Object.freeze({});

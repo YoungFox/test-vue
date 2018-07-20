@@ -4,6 +4,7 @@ import { mergeOptions } from '../util/index';
 import { initLifecycle, callHook } from './lifecycle.js';
 import { initEvents } from './events';
 import { initRender } from './render';
+import { initState } from './state';
 
 export function initMixin(Vue: Class<Component>) {
     Vue.prototype._init = function (options: Object) {
@@ -20,5 +21,7 @@ export function initMixin(Vue: Class<Component>) {
         initEvents(vm);
         initRender(vm);
         callHook(vm, 'beforeCreate');
+        initState(vm);
+        callHook(vm, 'created');
     };
 }
