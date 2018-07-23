@@ -27,6 +27,21 @@
 
     const emptyObject = Object.freeze({});
 
+    function nativeBind(fn, ctx) {
+        return fn.bind(ctx);
+    }
+
+    function polyfillBind(fn, ctx) {
+        function boundFn(a) {
+            const l = arguments.length;
+            return l ? l > 1 ? fn.apply(ctx, arguments) : fn.call(ctx, a) : fn.call(ctx);
+        }
+
+        return boundFn;
+    }
+
+    const bind = Function.prototype.bind ? nativeBind : polyfillBind;
+
     // 
 
     let warn = noop;
@@ -36,7 +51,8 @@
     };
 
     var config = {
-        optionMergeStrategies : Object.create(null)
+        optionMergeStrategies : Object.create(null),
+        perfomance: true
     };
 
     // 
@@ -89,6 +105,23 @@
     'output,progress,select,textarea,' +
     'details,dialog,menu,menuitem,summary,' +
     'content,element,shadow,template,blockquote,iframe,tfoot');
+
+    // 
+
+
+    function isReserved(str) {
+        const c = (str + '').charCodeAt(0);
+        return c === 0x24 || c === 0x5F;
+    }
+
+    function def(obj, key, val, enumerable) {
+        Object.defineProperty(obj, key, {
+            value: val,
+            enumerable: !!enumerable,
+            writable: true,
+            configurable: true
+        });
+    }
 
     // 
 
@@ -236,27 +269,52 @@
 
     // 
 
-    class Dep{
+    class Dep {
 
-        constructor(){
+        constructor() {
             this.subs = [];
         }
-        depend(){
-            if(Dep.target){
+        depend() {
+            if (Dep.target) {
                 this.target.addDep(this);
             }
         }
 
 
-        notify(){
+        notify() {
             let watcher;
-            for(watcher of this.subs){
+            for (watcher of this.subs) {
                 watcher.update();
             }
         }
     }
 
+    Dep.target = null;
+
     // 
+
+
+    class Observer {
+        
+
+        constructor(value) {
+            this.value = value;
+            this.dep = new Dep();
+            def(value, '__ob__', this);
+
+            this.walk(value);
+        }
+
+        walk(obj) {
+            const keys = Object.keys(obj);
+
+            for (let k of keys) {
+                defineReactive(obj, k);
+            }
+        }
+    }
+
+
 
     function defineReactive(obj, key, val, customSetter) {
         const dep = new Dep;
@@ -270,6 +328,10 @@
         const getter = property && property.get;
         const setter = property && property.set;
 
+        if ((!getter || setter) && arguments.length === 2) {
+            val = obj[key];
+        }
+
         Object.defineProperty(obj, key, {
             enumerable: true,
             configurable: true,
@@ -278,7 +340,7 @@
                 if (Dep.target) {
                     dep.depend();
                 }
-                
+
                 return value;
             },
             set: function (newVal) {
@@ -302,6 +364,13 @@
         });
     }
 
+
+    function observe(value) {
+        let ob;
+        ob = new Observer(value);
+        return ob;
+    }
+
     //  
 
     function initRender(vm){
@@ -321,14 +390,27 @@
         // vm.
     }
 
-    // 
+    //
 
+    // 
 
     function initState(vm) {
         vm._watchers = [];
         const options = vm.$options;
 
         if (options.props) initProps(vm, options.props);
+        if (options.methods) initMethods(vm, options.methods);
+        if (options.data) {
+            initData(vm);
+        } else {
+            observe(vm._data = {});
+        }
+
+        // placeholder  computed
+
+        if (options.watch) {
+            initWatch(vm, options.watch);
+        }
     }
 
     function initProps(vm, propsOptions) {
@@ -350,11 +432,86 @@
 
     }
 
+    function initMethods(vm, methods) {
+        const props = vm.$options.props;
+        for (let key of Object.keys(methods)) {
+            {
+                if (methods[key] == null) {
+                    warn(`Method ${key}方法未定义`);
+                }
+                if (props && hasOwn(props, key)) {
+                    warn('方法名已被props占用');
+                }
+                if ((key in vm) && isReserved(key)) {
+                    warn('不要使用$或_开头的变量定义方法');
+                }
+            }
+            vm[key] = methods[key] == null ? noop : bind(methods[key], vm);
+        }
+    }
+
+    function initData(vm) {
+        const data = vm.$options.data;
+
+        observe(data);
+    }
+
+
+    function initWatch(vm, watch) {
+        for (const key of Object.keys(watch)) {
+            const handler = watch[key];
+            createWatcher(vm, key, handler);
+        }
+    }
+
+    function createWatcher(vm, expOrFn, handler) {
+        return vm.$watch(expOrFn, handler);
+    }
+
+    // placeholder Watcher
+
+    const inBrowser = typeof window !== 'undefined';
+
+    let mark;
+    let measure;
+
+    {
+        const perf = inBrowser && window.performance;
+
+
+        if (perf && perf.mark && perf.measure && perf.clearMarks && perf.clearMeasures) {
+            mark = tag => perf.mark(tag);
+
+            measure = (name, startTag, endTag) => {
+                perf.measure(name, startTag, endTag);
+                console.log(perf.getEntries());
+
+                // placeholder 哪里用到了？
+                perf.clearMarks(startTag);
+                perf.clearMarks(endTag);
+                perf.clearMeasures(name);
+
+            };
+        }
+    }
+
     // 
+
+    let uid = 0;
 
     function initMixin(Vue) {
         Vue.prototype._init = function (options) {
             const vm = this;
+
+            let startTag, endTag;
+
+            vm._uid = uid++;
+
+            if (mark) {
+                startTag = `Vue perf start:${startTag}`;
+                endTag = `Vue perf start:${endTag}`;
+                mark(startTag);
+            }
 
             vm._isVue = true;
 
@@ -369,7 +526,14 @@
             callHook(vm, 'beforeCreate');
             initState(vm);
             callHook(vm, 'created');
+
+            if (mark) {
+                mark(endTag);
+                measure(`Vue ${vm.$options.name} init`, startTag, endTag);
+            }
+            this.$mount();
         };
+
     }
 
     // 
@@ -384,6 +548,24 @@
     }
 
     initMixin(Vue);
+
+    // 
+
+    Vue.prototype.$mount = function (){
+        console.log('rrrrrrr');
+    };
+
+    Vue.prototype.$mount = function (el,
+        hydrating){
+
+    };
+
+    Vue.prototype.$mount = function (){
+        // console.log('cccccccccc');
+        const options = this.$options;
+
+        console.log(options);
+    };
 
     return Vue;
 

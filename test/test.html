@@ -9,11 +9,12 @@
 
 <body>
 	<script>
-		var vue = new Vue({
+		var vm = new Vue({
 			a: 1111,
 			'beforeCreate': [function () { console.log('beforeCreate'); }],
 			'created': ["function () { console.log('created'); }"],
-			'props':{a:'1234'}
+			'props': { a: '1234' },
+			'methods': { $mb: function () { console.log(this._props.a) } }
 		});
 		// console.log(new Vue() instanceof Vue);
 		// console.log(Vue);

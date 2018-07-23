@@ -19,3 +19,18 @@ export function makeMap(str: string, toLowerCase: boolean): Function {
 }
 
 export const emptyObject = Object.freeze({});
+
+function nativeBind(fn: Function, ctx: Object): Function {
+    return fn.bind(ctx);
+}
+
+function polyfillBind(fn: Function, ctx: Object): Function {
+    function boundFn(a) {
+        const l = arguments.length;
+        return l ? l > 1 ? fn.apply(ctx, arguments) : fn.call(ctx, a) : fn.call(ctx);
+    }
+
+    return boundFn;
+}
+
+export const bind = Function.prototype.bind ? nativeBind : polyfillBind;
