@@ -531,7 +531,8 @@
                 mark(endTag);
                 measure(`Vue ${vm.$options.name} init`, startTag, endTag);
             }
-            this.$mount();
+
+            vm.$mount(this.$options.el);
         };
 
     }
@@ -551,21 +552,79 @@
 
     // 
 
-    Vue.prototype.$mount = function (){
-        console.log('rrrrrrr');
-    };
+
+    function query(el) {
+        if (typeof el === 'string') {
+            const selected = document.querySelector(el);
+            if (!selected) {
+                warn(`未找到元素：${el}`);
+                return document.createElement('div');
+            }
+            return selected;
+        } else {
+            return el;
+        }
+
+    }
+
+    // 
 
     Vue.prototype.$mount = function (el,
-        hydrating){
-
+        hydrating) {
+        el = (el && inBrowser) ? query(el): undefined;
+        
+        // return mountComponent(this, el, hydrating);
     };
 
-    Vue.prototype.$mount = function (){
+    // 
+
+    function compileToFuntions(){
+
+        return {
+            ast: null,
+            render: 1234,
+            staticRenderFns: null
+        };
+    }
+
+    //
+
+    // 
+
+    const mount = Vue.prototype.$mount;
+
+    Vue.prototype.$mount = function (el, hydrating) {
         // console.log('cccccccccc');
         const options = this.$options;
+        el = el && query(el);
 
-        console.log(options);
+        // console.log(options);
+        if (el === document.body || el === document.documentElement) {
+            warn('不要将Vue挂载到html或body上');
+            return;
+        }
+
+        if (!options.render) {
+            let template = options.template;
+            if (template) {
+                console.log('没有模板');
+            } else {
+                template = getOuterHTML(el);
+            }
+            if (template) {
+                const { render, staticRenderFns } = compileToFuntions(template, {}, this);
+
+                options.render = render;
+                open.staticRenderFns = staticRenderFns;
+            }
+        }
+
+        return mount.call(this, el, hydrating);
     };
+
+    function getOuterHTML(el) {
+        return el && el.outerHTML;
+    }
 
     return Vue;
 

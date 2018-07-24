@@ -42,7 +42,8 @@ export function initMixin(Vue: Class<Component>) {
             mark(endTag);
             measure(`Vue ${vm.$options.name} init`, startTag, endTag);
         }
-        this.$mount();
+
+        vm.$mount(this.$options.el);
     };
 
 }

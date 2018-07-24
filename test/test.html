@@ -8,8 +8,10 @@
 </head>
 
 <body>
+	<div id="app"></div>
 	<script>
 		var vm = new Vue({
+			el: '#app',
 			a: 1111,
 			'beforeCreate': [function () { console.log('beforeCreate'); }],
 			'created': ["function () { console.log('created'); }"],
