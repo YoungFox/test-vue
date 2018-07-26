@@ -578,8 +578,117 @@
 
     // 
 
-    function compileToFuntions(){
+    const isPlainTextElement = makeMap('script,style,textarea', true);
 
+    const attribute = /^.+?(?=\/?>)/;
+
+    const ncname = '[a-zA-Z_][\\w\\-\\.]*';
+    const qnameCapture = `((?:${ncname}\\:)?${ncname})`;
+    const startTagOpen = new RegExp(`^<${qnameCapture}`);
+    const startTagClose = /^\s*(\/?)>/;
+
+    function parseHTML(html, options) {
+        // return makeMap('script,style');
+        console.log(html);
+        let last;
+        let index = 0;
+
+        while (html) {
+            last = html;
+
+            if (!isPlainTextElement(last)) {
+                let textEnd = html.indexOf('<');
+
+                if (textEnd === 0) {
+                    const startTagMatch = parseStartTag();
+                    // console.log(startTagMatch);
+                    handleStartTag(startTagMatch);
+                }
+            }
+            break;
+        }
+
+
+
+        function advance(n) {
+            index += n;
+            html = html.substring(n);
+        }
+
+        function parseStartTag() {
+            const start = html.match(startTagOpen);
+            if (start) {
+                const match = {
+                    tagName: start[1],
+                    start: index,
+                    attrs: []
+                };
+                advance(start[0].length);
+                let end, attr;
+
+                while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+                    advance(attr[0].length);
+                    // console.log(attr);
+                    // break;
+                }
+
+                if(end){
+
+                    advance(end[0].length);
+                    match.end = index;
+                    return match;
+                }
+            }
+        }
+        function handleStartTag(match) {
+            let tagName = match.tagName;
+
+            if(options.start){
+                options.start(tagName);
+            }
+
+        }
+    }
+
+    // 
+
+    function createASTElement(tag, attrs, parent) {
+        return {
+            type: 1,
+            tag,
+            attrsList: attrs,
+            parent,
+            children: []
+        };
+    }
+
+    function parse(template) {
+        const stack = [];
+        let currentParent = null;
+
+        return parseHTML(template, {
+            start(tag) {
+                let element = createASTElement(tag);
+                console.log(element);
+
+                if(currentParent){
+                    currentParent.children.push(element);
+                    element.parent = currentParent;
+                }
+
+                currentParent = element;
+                stack.push(element);
+                console.log('ast',stack);
+
+            }
+        });
+    }
+
+    // 
+
+    function baseCompile(template){
+        const ast = parse(template.trim());
+        // console.log(`ast:${ast('script')}`);
         return {
             ast: null,
             render: 1234,
@@ -612,7 +721,7 @@
                 template = getOuterHTML(el);
             }
             if (template) {
-                const { render, staticRenderFns } = compileToFuntions(template, {}, this);
+                const { render, staticRenderFns } = baseCompile(template, {}, this);
 
                 options.render = render;
                 open.staticRenderFns = staticRenderFns;
