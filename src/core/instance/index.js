@@ -1,6 +1,7 @@
 // @flow
 import { initMixin } from './init';
 import { warn } from 'util/index';
+import { renderMixin } from './render';
 
 function Vue(options: Object) {
   var process: NodeJS.Process;
@@ -13,5 +14,8 @@ function Vue(options: Object) {
 }
 
 initMixin(Vue);
+
+
+renderMixin(Vue);
 
 export default Vue;

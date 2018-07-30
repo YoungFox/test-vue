@@ -1,7 +1,9 @@
 // @flow
 export default class Vnode{
     tag: string;
-    constructor(tag){
+    children: Array;
+    constructor(tag,children){
         this.tag = tag;
+        this.children = children;
     }
 } 

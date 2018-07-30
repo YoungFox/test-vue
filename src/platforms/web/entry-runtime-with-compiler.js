@@ -31,8 +31,6 @@ Vue.prototype.$mount = function (el, hydrating): Component {
 
             options.render = render;
             open.staticRenderFns = staticRenderFns;
-
-            console.log(render.call(this));
         }
     }
 

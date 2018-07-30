@@ -88,26 +88,6 @@
 
     // 
 
-    function isReservedTag(str){
-        // return true;
-
-        return isHtmlTag(str);
-    }
-
-    const isHtmlTag = makeMap('html,body,base,head,link,meta,style,title,' +
-    'address,article,aside,footer,header,h1,h2,h3,h4,h5,h6,hgroup,nav,section,' +
-    'div,dd,dl,dt,figcaption,figure,picture,hr,img,li,main,ol,p,pre,ul,' +
-    'a,b,abbr,bdi,bdo,br,cite,code,data,dfn,em,i,kbd,mark,q,rp,rt,rtc,ruby,' +
-    's,samp,small,span,strong,sub,sup,time,u,var,wbr,area,audio,map,track,video,' +
-    'embed,object,param,source,canvas,script,noscript,del,ins,' +
-    'caption,col,colgroup,table,thead,tbody,td,th,tr,' +
-    'button,datalist,fieldset,form,input,label,legend,meter,optgroup,option,' +
-    'output,progress,select,textarea,' +
-    'details,dialog,menu,menuitem,summary,' +
-    'content,element,shadow,template,blockquote,iframe,tfoot');
-
-    // 
-
 
     function isReserved(str) {
         const c = (str + '').charCodeAt(0);
@@ -237,32 +217,55 @@
     }
 
     // 
+
+    function isReservedTag(str){
+        // return true;
+
+        return isHtmlTag(str) || isSVG(str);
+    }
+
+    const isHtmlTag = makeMap('html,body,base,head,link,meta,style,title,' +
+    'address,article,aside,footer,header,h1,h2,h3,h4,h5,h6,hgroup,nav,section,' +
+    'div,dd,dl,dt,figcaption,figure,picture,hr,img,li,main,ol,p,pre,ul,' +
+    'a,b,abbr,bdi,bdo,br,cite,code,data,dfn,em,i,kbd,mark,q,rp,rt,rtc,ruby,' +
+    's,samp,small,span,strong,sub,sup,time,u,var,wbr,area,audio,map,track,video,' +
+    'embed,object,param,source,canvas,script,noscript,del,ins,' +
+    'caption,col,colgroup,table,thead,tbody,td,th,tr,' +
+    'button,datalist,fieldset,form,input,label,legend,meter,optgroup,option,' +
+    'output,progress,select,textarea,' +
+    'details,dialog,menu,menuitem,summary,' +
+    'content,element,shadow,template,blockquote,iframe,tfoot');
+
+    const isSVG = makeMap('svg,animate,circle,clippath,cursor,defs,desc,ellipse,filter,font-face,' +
+    'foreignObject,g,glyph,image,line,marker,mask,missing-glyph,path,pattern,' +
+    'polygon,polyline,rect,switch,symbol,text,textpath,tspan,use,view');
+
+    // 
     class Vnode{
         
-        constructor(tag){
+        
+        constructor(tag,children){
             this.tag = tag;
+            this.children = children;
         }
     }
 
     // 
 
-    function createElement() {
-
-
-        return _createElement();
+    function createElement(context, tag, children) {
+        return _createElement(undefined, tag, children);
     }
 
-    function _createElement(context, tag) {
+    function _createElement(context, tag, children) {
 
 
         let vnode;
 
         if (typeof tag === 'string') {
-            if(!isReservedTag(tag)){
-                vnode = new Vnode(tag);
+            if (isReservedTag(tag)) {
+                vnode = new Vnode(tag, children);
             }
         }
-
         return vnode;
     }
 
@@ -370,9 +373,20 @@
         return ob;
     }
 
+    function renderList(){
+        
+    }
+
+    // 
+
+
+    function installRenderHelpers(target){
+        target._l = renderList;
+    }
+
     //  
 
-    function initRender(vm){
+    function initRender(vm) {
         vm._vnode = null; //子树的根
         vm._staticTrees = null;
 
@@ -380,13 +394,18 @@
         const parentVnode = vm.$vnode = options._parentVnode;
         const renderContext = parentVnode && parentVnode.context;
         // createElement();
-        vm._c = createElement();
+        vm._c = (tag, children) => createElement(vm, tag, children);
 
 
-        defineReactive(vm, '$attr', emptyObject ,function (){
+        defineReactive(vm, '$attr', emptyObject, function () {
             warn('$attr是只读属性');
         });
         // vm.
+    }
+
+
+    function renderMixin(vm) {
+        installRenderHelpers(vm.prototype);
     }
 
     //
@@ -546,8 +565,10 @@
 
     initMixin(Vue);
 
-    // 
 
+    renderMixin(Vue);
+
+    // 
 
     function query(el) {
         if (typeof el === 'string') {
@@ -569,6 +590,8 @@
         hydrating) {
         el = (el && inBrowser) ? query(el): undefined;
         
+        // console.log(this);
+        // console.log(this.$options.render.call(this));
         // return mountComponent(this, el, hydrating);
     };
 
@@ -723,7 +746,7 @@
         let currentParent = null;
         let root;
 
-        return parseHTML(template, {
+        parseHTML(template, {
             start(tag) {
                 let element = createASTElement(tag);
                 if(!root){
@@ -737,8 +760,6 @@
 
                 currentParent = element;
                 stack.push(element);
-                console.log('ast',root);
-
             },
 
             text(text){
@@ -756,15 +777,48 @@
                 currentParent = element.parent;
             }
         });
+
+        return root;
     }
 
     // 
     function generate(ast){
-        const code = '_c("div")';
+        const code = ast ? genElement(ast) : '_c("div")';
 
         return {
             render: `with(this){return ${code}}`
         };
+    }
+
+    function genElement(el){
+
+        let code;
+
+        const children = genChildren(el);
+        
+        code = `_c('${el.tag}',${children})`;
+
+        return code;
+    }
+
+    function genChildren(el){
+
+        const children = el.children;
+
+        if(children && children.length){
+            return `[${children.map(c => genElement(c)).join(',')}]`;
+        }
+    }
+
+    // 
+
+    function codeToFunction(code) {
+        try {
+            return new Function(code);
+        } catch (e) {
+            warn(e);
+            return noop;
+        }
     }
 
     // 
@@ -773,10 +827,11 @@
         const ast = parse(template.trim());
 
         const code = generate(ast);
+        console.log(code);
 
         return {
             ast: null,
-            render: code.render,
+            render: codeToFunction(code.render),
             staticRenderFns: null
         };
     }
@@ -808,8 +863,6 @@
 
                 options.render = render;
                 open.staticRenderFns = staticRenderFns;
-
-                console.log(render.call(this));
             }
         }
 

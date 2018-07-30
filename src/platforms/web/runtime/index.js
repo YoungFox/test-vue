@@ -9,5 +9,7 @@ Vue.prototype.$mount = function (el,
     hydrating): Component {
     el = (el && inBrowser) ? query(el): undefined;
     
+    // console.log(this);
+    // console.log(this.$options.render.call(this));
     // return mountComponent(this, el, hydrating);
-}
+};

@@ -4,7 +4,7 @@ import {makeMap} from 'shared/util';
 export function isReservedTag(str): boolean{
     // return true;
 
-    return isHtmlTag(str);
+    return isHtmlTag(str) || isSVG(str);
 }
 
 const isHtmlTag = makeMap('html,body,base,head,link,meta,style,title,' +
@@ -18,3 +18,7 @@ const isHtmlTag = makeMap('html,body,base,head,link,meta,style,title,' +
 'output,progress,select,textarea,' +
 'details,dialog,menu,menuitem,summary,' +
 'content,element,shadow,template,blockquote,iframe,tfoot');
+
+const isSVG = makeMap('svg,animate,circle,clippath,cursor,defs,desc,ellipse,filter,font-face,' +
+'foreignObject,g,glyph,image,line,marker,mask,missing-glyph,path,pattern,' +
+'polygon,polyline,rect,switch,symbol,text,textpath,tspan,use,view');

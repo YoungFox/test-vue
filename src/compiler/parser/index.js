@@ -16,7 +16,7 @@ export function parse(template): any {
     let currentParent = null;
     let root;
 
-    return parseHTML(template, {
+    parseHTML(template, {
         start(tag) {
             let element = createASTElement(tag);
             if(!root){
@@ -30,8 +30,6 @@ export function parse(template): any {
 
             currentParent = element;
             stack.push(element);
-            console.log('ast',root);
-
         },
 
         text(text: string){
@@ -49,4 +47,6 @@ export function parse(template): any {
             currentParent = element.parent;
         }
     });
+
+    return root;
 }
