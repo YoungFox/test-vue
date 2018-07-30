@@ -40,3 +40,8 @@ export function callHook(vm, hook){
     }
     // debugger;
 }
+
+export function mountComponent(vm,el){
+    callHook(vm, 'beforeMount');
+    
+}

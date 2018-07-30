@@ -11,11 +11,9 @@ export default Vue;
 const mount = Vue.prototype.$mount;
 
 Vue.prototype.$mount = function (el, hydrating): Component {
-    // console.log('cccccccccc');
     const options = this.$options;
     el = el && query(el);
 
-    // console.log(options);
     if (el === document.body || el === document.documentElement) {
         warn('不要将Vue挂载到html或body上');
         return;
@@ -33,6 +31,8 @@ Vue.prototype.$mount = function (el, hydrating): Component {
 
             options.render = render;
             open.staticRenderFns = staticRenderFns;
+
+            console.log(render.call(this));
         }
     }
 

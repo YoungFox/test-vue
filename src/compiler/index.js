@@ -1,12 +1,15 @@
 // @flow
 import {parse} from './parser/index';
+import { generate } from './codegen/index';
 
 export default function baseCompile(template): Object{
     const ast = parse(template.trim());
-    // console.log(`ast:${ast('script')}`);
+
+    const code = generate(ast);
+
     return {
         ast: null,
-        render: 1234,
+        render: code.render,
         staticRenderFns: null
     };
 }

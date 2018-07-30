@@ -28,7 +28,6 @@ export function initMixin(Vue: Class<Component>) {
 
         vm.$options = mergeOptions({}, options || {});
 
-        // console.log(vm.$options);
         vm._self = vm;
 
         initLifecycle(vm);

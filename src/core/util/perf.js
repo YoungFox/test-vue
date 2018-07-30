@@ -12,7 +12,6 @@ if (process.env.NODE_ENV !== 'production') {
 
         measure = (name, startTag, endTag) => {
             perf.measure(name, startTag, endTag);
-            console.log(perf.getEntries());
 
             // placeholder 哪里用到了？
             perf.clearMarks(startTag);

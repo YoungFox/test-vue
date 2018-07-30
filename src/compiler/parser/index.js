@@ -19,8 +19,6 @@ export function parse(template): any {
     return parseHTML(template, {
         start(tag) {
             let element = createASTElement(tag);
-            console.log(element);
-
             if(!root){
                 root = element;
             }
@@ -32,8 +30,23 @@ export function parse(template): any {
 
             currentParent = element;
             stack.push(element);
-            console.log('ast',stack);
+            console.log('ast',root);
 
+        },
+
+        text(text: string){
+            const children = currentParent.children;
+            if(text){
+                children.push({
+                    type: 2,
+                    text
+                });
+            }
+        },
+        end(){
+            const element = stack[stack.length - 1];   
+            stack.pop();
+            currentParent = element.parent;
         }
     });
 }

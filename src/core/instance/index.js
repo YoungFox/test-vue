@@ -10,7 +10,6 @@ function Vue(options: Object) {
     warn('Vue is a constructor and should be called with the `new` keyword');
   }
   this._init(options);
-  // console.log(this instanceof Vue);
 }
 
 initMixin(Vue);

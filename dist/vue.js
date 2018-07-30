@@ -258,9 +258,8 @@
         let vnode;
 
         if (typeof tag === 'string') {
-            if(isReservedTag(tag)){
-                console.log(true);
-                vnode = new Vnode();
+            if(!isReservedTag(tag)){
+                vnode = new Vnode(tag);
             }
         }
 
@@ -484,7 +483,6 @@
 
             measure = (name, startTag, endTag) => {
                 perf.measure(name, startTag, endTag);
-                console.log(perf.getEntries());
 
                 // placeholder 哪里用到了？
                 perf.clearMarks(startTag);
@@ -517,7 +515,6 @@
 
             vm.$options = mergeOptions({}, options || {});
 
-            // console.log(vm.$options);
             vm._self = vm;
 
             initLifecycle(vm);
@@ -545,7 +542,6 @@
         warn('Vue is a constructor and should be called with the `new` keyword');
       }
       this._init(options);
-      // console.log(this instanceof Vue);
     }
 
     initMixin(Vue);
@@ -586,26 +582,51 @@
     const qnameCapture = `((?:${ncname}\\:)?${ncname})`;
     const startTagOpen = new RegExp(`^<${qnameCapture}`);
     const startTagClose = /^\s*(\/?)>/;
+    const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`);
 
     function parseHTML(html, options) {
         // return makeMap('script,style');
-        console.log(html);
         let last;
         let index = 0;
-
+        let stack = [];
+        let a = 1;
         while (html) {
             last = html;
-
+            a++;
             if (!isPlainTextElement(last)) {
                 let textEnd = html.indexOf('<');
 
                 if (textEnd === 0) {
                     const startTagMatch = parseStartTag();
-                    // console.log(startTagMatch);
-                    handleStartTag(startTagMatch);
+                    if (startTagMatch) {
+                        handleStartTag(startTagMatch);
+                    }
+
+                    const endTagMatch = parserEndTag();
+
+                    if (endTagMatch) {
+                        let { tagName, start, end } = endTagMatch;
+
+                        handleEndTag(tagName, start, end);
+                    }
                 }
+
+                if (textEnd > 0) {
+                    let text;
+                    text = html.substring(0, textEnd);
+                    advance(textEnd);
+
+                    if(text && options.text){
+                        options.text(text);
+                    }
+                }
+
+
+
             }
-            break;
+            if (a > 30) {
+                break;
+            }
         }
 
 
@@ -628,25 +649,60 @@
 
                 while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
                     advance(attr[0].length);
-                    // console.log(attr);
-                    // break;
                 }
 
-                if(end){
-
+                if (end) {
                     advance(end[0].length);
                     match.end = index;
                     return match;
                 }
             }
         }
+
         function handleStartTag(match) {
             let tagName = match.tagName;
+            stack.push({ tagName });
 
-            if(options.start){
+            if (options.start) {
                 options.start(tagName);
             }
 
+        }
+
+        function parserEndTag() {
+            const end = html.match(endTag);
+            if (end) {
+                let match = {
+                    tagName: end[1],
+                    start: index
+                };
+                advance(end[0].length);
+                match.end = index;
+                return match;
+            }
+        }
+
+        function handleEndTag(tagName, start, end) {
+            let pos;
+            if (tagName) {
+                for (pos = stack.length - 1; pos >= 0; pos--) {
+                    if (stack[pos].tagName === tagName) {
+
+                        break;
+                    } else {
+                        console.log(`${stack[pos].tagName}未闭合`);
+                    }
+                }
+            } else {
+                pos = 0;
+            }
+
+            stack.length = pos;
+            // lastTag = pos && stack[pos - 1];
+
+            if(options.end){
+                options.end();
+            }
         }
     }
 
@@ -665,11 +721,14 @@
     function parse(template) {
         const stack = [];
         let currentParent = null;
+        let root;
 
         return parseHTML(template, {
             start(tag) {
                 let element = createASTElement(tag);
-                console.log(element);
+                if(!root){
+                    root = element;
+                }
 
                 if(currentParent){
                     currentParent.children.push(element);
@@ -678,20 +737,46 @@
 
                 currentParent = element;
                 stack.push(element);
-                console.log('ast',stack);
+                console.log('ast',root);
 
+            },
+
+            text(text){
+                const children = currentParent.children;
+                if(text){
+                    children.push({
+                        type: 2,
+                        text
+                    });
+                }
+            },
+            end(){
+                const element = stack[stack.length - 1];   
+                stack.pop();
+                currentParent = element.parent;
             }
         });
+    }
+
+    // 
+    function generate(ast){
+        const code = '_c("div")';
+
+        return {
+            render: `with(this){return ${code}}`
+        };
     }
 
     // 
 
     function baseCompile(template){
         const ast = parse(template.trim());
-        // console.log(`ast:${ast('script')}`);
+
+        const code = generate(ast);
+
         return {
             ast: null,
-            render: 1234,
+            render: code.render,
             staticRenderFns: null
         };
     }
@@ -703,11 +788,9 @@
     const mount = Vue.prototype.$mount;
 
     Vue.prototype.$mount = function (el, hydrating) {
-        // console.log('cccccccccc');
         const options = this.$options;
         el = el && query(el);
 
-        // console.log(options);
         if (el === document.body || el === document.documentElement) {
             warn('不要将Vue挂载到html或body上');
             return;
@@ -725,6 +808,8 @@
 
                 options.render = render;
                 open.staticRenderFns = staticRenderFns;
+
+                console.log(render.call(this));
             }
         }
 

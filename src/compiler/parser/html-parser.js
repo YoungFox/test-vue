@@ -13,24 +13,47 @@ const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`);
 
 export function parseHTML(html, options) {
     // return makeMap('script,style');
-    console.log(html);
     let last, lastTag;
     let index = 0;
     let stack = [];
-
+    let a = 1;
     while (html) {
         last = html;
-
+        a++;
         if (!isPlainTextElement(last)) {
             let textEnd = html.indexOf('<');
 
             if (textEnd === 0) {
                 const startTagMatch = parseStartTag();
-                // console.log(startTagMatch);
-                handleStartTag(startTagMatch);
+                if (startTagMatch) {
+                    handleStartTag(startTagMatch);
+                }
+
+                const endTagMatch = parserEndTag();
+
+                if (endTagMatch) {
+                    let { tagName, start, end } = endTagMatch;
+
+                    handleEndTag(tagName, start, end);
+                }
             }
+
+            if (textEnd > 0) {
+                let text;
+                text = html.substring(0, textEnd);
+                advance(textEnd);
+
+                if(text && options.text){
+                    options.text(text);
+                }
+            }
+
+
+
         }
-        break;
+        if (a > 30) {
+            break;
+        }
     }
 
 
@@ -53,27 +76,61 @@ export function parseHTML(html, options) {
 
             while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
                 advance(attr[0].length);
-                // console.log(attr);
-                // break;
             }
 
-            if(end){
-
+            if (end) {
                 advance(end[0].length);
                 match.end = index;
                 return match;
             }
         }
     }
+
     function handleStartTag(match) {
         let tagName = match.tagName;
-        stack.push({ tagName: tagName });
+        stack.push({ tagName });
         lastTag = tagName;
 
-        if(options.start){
+        if (options.start) {
             options.start(tagName);
         }
 
+    }
+
+    function parserEndTag(): Object {
+        const end = html.match(endTag);
+        if (end) {
+            let match = {
+                tagName: end[1],
+                start: index
+            };
+            advance(end[0].length);
+            match.end = index;
+            return match;
+        }
+    }
+
+    function handleEndTag(tagName, start, end) {
+        let pos;
+        if (tagName) {
+            for (pos = stack.length - 1; pos >= 0; pos--) {
+                if (stack[pos].tagName === tagName) {
+
+                    break;
+                } else {
+                    console.log(`${stack[pos].tagName}未闭合`);
+                }
+            }
+        } else {
+            pos = 0;
+        }
+
+        stack.length = pos;
+        // lastTag = pos && stack[pos - 1];
+
+        if(options.end){
+            options.end();
+        }
     }
 }
 
