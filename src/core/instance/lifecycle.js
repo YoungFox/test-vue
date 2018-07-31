@@ -1,5 +1,6 @@
 // @flow
 import {logError} from '../util/error';
+import Watcher from '../observer/watcher';
 
 export function initLifecycle(vm: Component) {
     let options = vm.$options;
@@ -25,6 +26,19 @@ export function initLifecycle(vm: Component) {
     vm._isBeginDestroyed = false;
 }
 
+export function lifecycleMixin(Vue){
+    Vue.prototype._update = function (vnode){
+        const vm = this;
+        const prevVnode = vm._vnode; 
+        vm._vnode = vnode;
+
+        // 
+        if(!prevVnode){
+            vm.$el = vm.__patch__(vm.$el,vnode);
+        }
+    };
+}
+
 export function callHook(vm, hook){
     const handlers = vm.$options[hook];
     if(handlers){
@@ -43,5 +57,14 @@ export function callHook(vm, hook){
 
 export function mountComponent(vm,el){
     callHook(vm, 'beforeMount');
-    
+    const vnode = vm._render();
+    vm.$el = el;
+
+    console.log(vnode);
+    function updateComponent(){
+        vm._update(vnode);
+    }
+
+    new Watcher(vm, updateComponent);
+
 }

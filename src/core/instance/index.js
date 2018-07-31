@@ -2,6 +2,7 @@
 import { initMixin } from './init';
 import { warn } from 'util/index';
 import { renderMixin } from './render';
+import {lifecycleMixin} from './lifecycle';
 
 function Vue(options: Object) {
   var process: NodeJS.Process;
@@ -14,8 +15,7 @@ function Vue(options: Object) {
 }
 
 initMixin(Vue);
-
-
+lifecycleMixin(Vue);
 renderMixin(Vue);
 
 export default Vue;

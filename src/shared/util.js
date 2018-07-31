@@ -34,3 +34,12 @@ function polyfillBind(fn: Function, ctx: Object): Function {
 }
 
 export const bind = Function.prototype.bind ? nativeBind : polyfillBind;
+
+
+export function isUndef(v) {
+    return v === undefined || v === null;
+}
+
+export function isDef(v) {
+    return v !== undefined && v !== null;
+}

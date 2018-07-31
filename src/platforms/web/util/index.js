@@ -17,3 +17,6 @@ export function query(el: string | Element): Element {
     }
 
 }
+
+
+export * from './dom';

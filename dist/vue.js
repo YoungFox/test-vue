@@ -42,6 +42,15 @@
 
     const bind = Function.prototype.bind ? nativeBind : polyfillBind;
 
+
+    function isUndef(v) {
+        return v === undefined || v === null;
+    }
+
+    function isDef(v) {
+        return v !== undefined && v !== null;
+    }
+
     // 
 
     let warn = noop;
@@ -113,6 +122,74 @@
 
     // 
 
+    class Dep {
+
+        constructor() {
+            this.subs = [];
+        }
+        depend() {
+            if (Dep.target) {
+                this.target.addDep(this);
+            }
+        }
+
+
+        notify() {
+            let watcher;
+            for (watcher of this.subs) {
+                watcher.update();
+            }
+        }
+    }
+
+    Dep.target = null;
+    const targetStack = [];
+
+    function pushTarget(target) {
+        if (Dep.target) targetStack.push(Dep.target);
+        Dep.target = target;
+    }
+
+    function popTarget(){
+        Dep.target = targetStack.pop();
+    }
+
+    // 
+
+    class Watcher {
+        
+        
+        
+        constructor(vm, expOrFn, cb) {
+            this.vm = vm;
+            vm._watchers.push(this);
+
+            if (typeof expOrFn === 'function') {
+                this.getter = expOrFn;
+            } else {
+                this.getter = expOrFn;
+            }
+
+            this.value = this.get();
+        }
+
+        get(){
+            pushTarget(this);
+            const vm = this.vm;
+            let value;
+            try{
+                value = this.getter();
+            }catch(e){
+                console.log(e);
+            }finally{
+                popTarget();
+            }
+            return value;
+        }
+    }
+
+    // 
+
     function initLifecycle(vm) {
         let options = vm.$options;
 
@@ -137,6 +214,19 @@
         vm._isBeginDestroyed = false;
     }
 
+    function lifecycleMixin(Vue){
+        Vue.prototype._update = function (vnode){
+            const vm = this;
+            const prevVnode = vm._vnode; 
+            vm._vnode = vnode;
+
+            // 
+            if(!prevVnode){
+                vm.$el = vm.__patch__(vm.$el,vnode);
+            }
+        };
+    }
+
     function callHook(vm, hook){
         const handlers = vm.$options[hook];
         if(handlers){
@@ -151,6 +241,20 @@
             }
         }
         // debugger;
+    }
+
+    function mountComponent(vm,el){
+        callHook(vm, 'beforeMount');
+        const vnode = vm._render();
+        vm.$el = el;
+
+        console.log(vnode);
+        function updateComponent(){
+            vm._update(vnode);
+        }
+
+        new Watcher(vm, updateComponent);
+
     }
 
     // 
@@ -241,12 +345,14 @@
     'polygon,polyline,rect,switch,symbol,text,textpath,tspan,use,view');
 
     // 
-    class Vnode{
+    class Vnode {
         
         
-        constructor(tag,children){
+        
+        constructor(tag, children, elm) {
             this.tag = tag;
             this.children = children;
+            this.elm = elm;
         }
     }
 
@@ -268,30 +374,6 @@
         }
         return vnode;
     }
-
-    // 
-
-    class Dep {
-
-        constructor() {
-            this.subs = [];
-        }
-        depend() {
-            if (Dep.target) {
-                this.target.addDep(this);
-            }
-        }
-
-
-        notify() {
-            let watcher;
-            for (watcher of this.subs) {
-                watcher.update();
-            }
-        }
-    }
-
-    Dep.target = null;
 
     // 
 
@@ -406,9 +488,20 @@
 
     function renderMixin(vm) {
         installRenderHelpers(vm.prototype);
-    }
 
-    //
+        vm.prototype._render = function () {
+            let vm = this;
+            let vnode;
+            const { render } = vm.$options;
+            try {
+                vnode = render.call(this);
+            } catch (e) {
+                warn(e);
+            }
+
+            return vnode;
+        };
+    }
 
     // 
 
@@ -564,9 +657,23 @@
     }
 
     initMixin(Vue);
-
-
+    lifecycleMixin(Vue);
     renderMixin(Vue);
+
+    const domTools = {
+        createElement: function (tagName) {
+            const elm = document.createElement(tagName);
+            if (tagName != 'select') {
+                return elm;
+            }
+        },
+        insertBefore(parentNode, newNode, referenceNode) {
+            parentNode.insertBefore(newNode, referenceNode);
+        },
+        appendChild(node, child) {
+            node.appendChild(child);
+        }
+    };
 
     // 
 
@@ -584,15 +691,54 @@
 
     }
 
+    function createRealElement(vnode, parentElm) {
+        const children = vnode.children;
+
+        const tag = vnode.tag;
+        if (isDef(tag)) {
+            vnode.elm = domTools.createElement(tag);
+        }
+
+        insert(parentElm, vnode.elm);
+        debugger;
+    }
+
+    function insert(parent, elm) {
+        if (isDef(parent)) {
+            domTools.appendChild(parent, elm);
+        }
+    }
+
+    function createPatchFunction(){
+
+        return function patch(oldVnode, vnode) {
+            const isRealElement = x => isDef(x.nodeType);
+            if (isUndef(oldVnode)) {
+                console.log('没有根');
+            }else{
+                if(isRealElement(oldVnode)){
+                    console.log('real');
+                    oldVnode = new Vnode(oldVnode.tagName,[],oldVnode);
+
+                    createRealElement(vnode, oldVnode.elm); 
+                }
+            }
+        };
+    }
+
+    const patch = createPatchFunction();
+
     // 
+
+    Vue.prototype.__patch__ = patch;
 
     Vue.prototype.$mount = function (el,
         hydrating) {
-        el = (el && inBrowser) ? query(el): undefined;
-        
+        el = (el && inBrowser) ? query(el) : undefined;
+
         // console.log(this);
         // console.log(this.$options.render.call(this));
-        // return mountComponent(this, el, hydrating);
+        return mountComponent(this, el, hydrating);
     };
 
     // 

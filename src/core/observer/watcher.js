@@ -3,11 +3,11 @@ import Dep, { pushTarget, popTarget } from './dep';
 
 export default class Watcher {
     vm: Component;
-    expression: string;
+    expOrFn: string;
     cb: Function;
     constructor(vm, expOrFn, cb) {
         this.vm = vm;
-        vm.watchers.push(this);
+        vm._watchers.push(this);
 
         if (typeof expOrFn === 'function') {
             this.getter = expOrFn;
@@ -22,7 +22,6 @@ export default class Watcher {
         pushTarget(this);
         const vm = this.vm;
         let value;
-
         try{
             value = this.getter();
         }catch(e){

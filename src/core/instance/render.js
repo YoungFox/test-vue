@@ -25,4 +25,17 @@ export function initRender(vm: Component) {
 
 export function renderMixin(vm: Component) {
     installRenderHelpers(vm.prototype);
+
+    vm.prototype._render = function () {
+        let vm = this;
+        let vnode;
+        const { render } = vm.$options;
+        try {
+            vnode = render.call(this);
+        } catch (e) {
+            warn(e);
+        }
+
+        return vnode;
+    };
 }
