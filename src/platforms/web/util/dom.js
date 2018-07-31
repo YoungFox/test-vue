@@ -11,5 +11,8 @@ export const domTools = {
     },
     appendChild(node, child) {
         node.appendChild(child);
+    },
+    parentNode(node){
+        return node.parentNode;
     }
 };
