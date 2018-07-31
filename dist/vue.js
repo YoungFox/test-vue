@@ -675,6 +675,9 @@
         },
         parentNode(node){
             return node.parentNode;
+        },
+        removeChild(parent, child){
+            parent.removeChild(child);
         }
     };
 
@@ -728,6 +731,17 @@
         }
     }
 
+    function removeVnodes(vnode) {
+        if (vnode.elm) {
+            removeNode(vnode.elm);
+        }
+    }
+
+    function removeNode(el) {
+        let parentElm = domTools.parentNode(el);
+        domTools.removeChild(parentElm, el);
+    }
+
     function createPatchFunction() {
 
         return function patch(oldVnode, vnode) {
@@ -740,6 +754,10 @@
                     oldVnode = new Vnode(oldVnode.tagName, [], oldVnode);
                     let parentElm = domTools.parentNode(oldVnode.elm);
                     createRealElement(vnode, parentElm, oldVnode.elm);
+
+                    if (isDef(parentElm)) {
+                        removeVnodes(oldVnode);
+                    }
                 }
             }
         };

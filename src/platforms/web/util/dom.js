@@ -14,5 +14,8 @@ export const domTools = {
     },
     parentNode(node){
         return node.parentNode;
+    },
+    removeChild(parent, child){
+        parent.removeChild(child);
     }
 };

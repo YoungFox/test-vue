@@ -35,6 +35,17 @@ function insert(parent, elm, refElm) {
     }
 }
 
+function removeVnodes(vnode) {
+    if (vnode.elm) {
+        removeNode(vnode.elm);
+    }
+}
+
+function removeNode(el) {
+    let parentElm = domTools.parentNode(el);
+    domTools.removeChild(parentElm, el);
+}
+
 export function createPatchFunction(): any {
 
     return function patch(oldVnode, vnode) {
@@ -47,6 +58,10 @@ export function createPatchFunction(): any {
                 oldVnode = new Vnode(oldVnode.tagName, [], oldVnode);
                 let parentElm = domTools.parentNode(oldVnode.elm);
                 createRealElement(vnode, parentElm, oldVnode.elm);
+
+                if (isDef(parentElm)) {
+                    removeVnodes(oldVnode);
+                }
             }
         }
     };
