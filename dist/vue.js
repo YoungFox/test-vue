@@ -20,9 +20,9 @@
 
         let list = str.split(',');
 
-        list.map(val => map[val] = true);
+        list.map((val) => map[val] = true);
 
-        return toLowerCase ? key => map[key.toLowerCase()] : key => map[key];
+        return toLowerCase ? (key) => map[key.toLowerCase()] : (key) => map[key];
     }
 
     const emptyObject = Object.freeze({});
@@ -214,27 +214,27 @@
         vm._isBeginDestroyed = false;
     }
 
-    function lifecycleMixin(Vue){
-        Vue.prototype._update = function (vnode){
+    function lifecycleMixin(Vue) {
+        Vue.prototype._update = function (vnode) {
             const vm = this;
-            const prevVnode = vm._vnode; 
+            const prevVnode = vm._vnode;
             vm._vnode = vnode;
 
             // 
-            if(!prevVnode){
-                vm.$el = vm.__patch__(vm.$el,vnode);
+            if (!prevVnode) {
+                vm.$el = vm.__patch__(vm.$el, vnode);
             }
         };
     }
 
-    function callHook(vm, hook){
+    function callHook(vm, hook) {
         const handlers = vm.$options[hook];
-        if(handlers){
+        if (handlers) {
             let h;
-            for(h of handlers.values()){
-                try{
+            for (h of handlers.values()) {
+                try {
                     h.call(vm);
-                }catch(e){
+                } catch (e) {
                     // console.log(e);
                     logError(e, vm, `${hook} hook`);
                 }
@@ -243,13 +243,11 @@
         // debugger;
     }
 
-    function mountComponent(vm,el){
+    function mountComponent(vm, el) {
         callHook(vm, 'beforeMount');
         const vnode = vm._render();
         vm.$el = el;
-
-        console.log(vnode);
-        function updateComponent(){
+        function updateComponent() {
             vm._update(vnode);
         }
 
@@ -461,7 +459,6 @@
 
     // 
 
-
     function installRenderHelpers(target){
         target._l = renderList;
     }
@@ -493,6 +490,8 @@
             let vm = this;
             let vnode;
             const { render } = vm.$options;
+
+            // warn(render.toString());
             try {
                 vnode = render.call(this);
             } catch (e) {
@@ -795,10 +794,8 @@
         let last;
         let index = 0;
         let stack = [];
-        let a = 1;
         while (html) {
             last = html;
-            a++;
             if (!isPlainTextElement(last)) {
                 let textEnd = html.indexOf('<');
 
@@ -826,12 +823,6 @@
                         options.text(text);
                     }
                 }
-
-
-
-            }
-            if (a > 30) {
-                break;
             }
         }
 
@@ -932,11 +923,11 @@
         parseHTML(template, {
             start(tag) {
                 let element = createASTElement(tag);
-                if(!root){
+                if (!root) {
                     root = element;
                 }
 
-                if(currentParent){
+                if (currentParent) {
                     currentParent.children.push(element);
                     element.parent = currentParent;
                 }
@@ -945,17 +936,17 @@
                 stack.push(element);
             },
 
-            text(text){
+            text(text) {
                 const children = currentParent.children;
-                if(text){
+                if (text) {
                     children.push({
                         type: 2,
                         text
                     });
                 }
             },
-            end(){
-                const element = stack[stack.length - 1];   
+            end() {
+                const element = stack[stack.length - 1];
                 stack.pop();
                 currentParent = element.parent;
             }
@@ -1013,7 +1004,7 @@
         console.log(code);
 
         return {
-            ast: null,
+            ast: ast,
             render: codeToFunction(code.render),
             staticRenderFns: null
         };
@@ -1037,7 +1028,7 @@
         if (!options.render) {
             let template = options.template;
             if (template) {
-                console.log('没有模板');
+                warn('没有模板');
             } else {
                 template = getOuterHTML(el);
             }

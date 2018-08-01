@@ -2,7 +2,7 @@
 
 import { defineReactive, observe } from '../observer/index';
 import { warn, noop, hasOwn, bind, isReserved } from '../util/index';
-import  Watcher from '../observer/watcher';
+import Watcher from '../observer/watcher';
 
 export function initState(vm) {
     vm._watchers = [];

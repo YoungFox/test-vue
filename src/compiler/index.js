@@ -10,7 +10,7 @@ export default function baseCompile(template): Object{
     console.log(code);
 
     return {
-        ast: null,
+        ast: ast,
         render: codeToFunction(code.render),
         staticRenderFns: null
     };

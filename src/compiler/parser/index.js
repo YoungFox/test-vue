@@ -19,11 +19,11 @@ export function parse(template): any {
     parseHTML(template, {
         start(tag) {
             let element = createASTElement(tag);
-            if(!root){
+            if (!root) {
                 root = element;
             }
 
-            if(currentParent){
+            if (currentParent) {
                 currentParent.children.push(element);
                 element.parent = currentParent;
             }
@@ -32,17 +32,17 @@ export function parse(template): any {
             stack.push(element);
         },
 
-        text(text: string){
+        text(text: string) {
             const children = currentParent.children;
-            if(text){
+            if (text) {
                 children.push({
                     type: 2,
                     text
                 });
             }
         },
-        end(){
-            const element = stack[stack.length - 1];   
+        end() {
+            const element = stack[stack.length - 1];
             stack.pop();
             currentParent = element.parent;
         }

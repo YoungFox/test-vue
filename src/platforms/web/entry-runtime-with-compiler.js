@@ -22,7 +22,7 @@ Vue.prototype.$mount = function (el, hydrating): Component {
     if (!options.render) {
         let template = options.template;
         if (template) {
-            console.log('没有模板');
+            warn('没有模板');
         } else {
             template = getOuterHTML(el);
         }
@@ -37,6 +37,6 @@ Vue.prototype.$mount = function (el, hydrating): Component {
     return mount.call(this, el, hydrating);
 };
 
-function getOuterHTML(el): Element {
+function getOuterHTML(el: Element): Element {
     return el && el.outerHTML;
 }

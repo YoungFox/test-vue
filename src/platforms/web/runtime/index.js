@@ -3,7 +3,7 @@ import Vue from 'core/index';
 import { query } from 'web/util/index';
 import { inBrowser } from 'core/util/env';
 import { mountComponent } from 'instance/lifecycle';
-import {patch} from './patch';
+import { patch } from './patch';
 
 export default Vue;
 

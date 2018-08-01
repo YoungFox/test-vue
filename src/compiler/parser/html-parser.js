@@ -11,15 +11,13 @@ const startTagOpen = new RegExp(`^<${qnameCapture}`);
 const startTagClose = /^\s*(\/?)>/;
 const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`);
 
-export function parseHTML(html, options) {
+export function parseHTML(html: string, options: Object) {
     // return makeMap('script,style');
     let last, lastTag;
     let index = 0;
     let stack = [];
-    let a = 1;
     while (html) {
         last = html;
-        a++;
         if (!isPlainTextElement(last)) {
             let textEnd = html.indexOf('<');
 
@@ -47,12 +45,6 @@ export function parseHTML(html, options) {
                     options.text(text);
                 }
             }
-
-
-
-        }
-        if (a > 30) {
-            break;
         }
     }
 
