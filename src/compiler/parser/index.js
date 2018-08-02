@@ -1,5 +1,6 @@
 // @flow
 import { parseHTML } from './html-parser';
+import { parseText } from './text-parser';
 
 export function createASTElement(tag: string, attrs: Array<any>, parent: ASTElement): ASTElement {
     return {
@@ -34,9 +35,20 @@ export function parse(template): any {
 
         text(text: string) {
             const children = currentParent.children;
-            if (text) {
+
+            // 提取表达式
+            let { expression } = parseText(text);
+
+            if (expression) {
                 children.push({
                     type: 2,
+                    text,
+                    expression
+                });
+
+            } else if (text != ' ') {
+                children.push({
+                    type: 3,
                     text
                 });
             }
@@ -47,6 +59,5 @@ export function parse(template): any {
             currentParent = element.parent;
         }
     });
-
     return root;
 }

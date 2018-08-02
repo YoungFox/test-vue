@@ -62,10 +62,37 @@ function initMethods(vm: Compnent, methods: Object) {
 
 function initData(vm: Compnent) {
     const data = vm.$options.data;
+    vm._data = data;
+    let keys = Object.keys(data);
+
+    for (let i of keys) {
+
+        // Object.defineProperty(vm, i, data[i]);
+        proxy(vm, '_data', i);
+    }
 
     observe(data);
 }
 
+function proxy(target, sourceKey, key) {
+    let sharedPropertyDefinition = {
+        enumrable: true,
+        configurable: true,
+        get: noop,
+        set: noop
+    };
+
+    sharedPropertyDefinition.get = function () {
+        // debugger;
+        // console.log('ggggggg');
+        return this[sourceKey][key];
+    };
+    sharedPropertyDefinition.set = function (val) {
+        this[sourceKey][key] = val;
+    };
+
+    Object.defineProperty(target, key, sharedPropertyDefinition);
+}
 
 function initWatch(vm, watch) {
     for (const key of Object.keys(watch)) {

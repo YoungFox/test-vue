@@ -3,12 +3,12 @@ import { warn } from 'util/index';
 import { noop } from 'shared/util';
 
 function codeToFunction(code: string): Function {
-    try {
+    // try {
         return new Function(code);
-    } catch (e) {
-        warn(e);
-        return noop;
-    }
+    // } catch (e) {
+    //     warn(e);
+    //     return noop;
+    // }
 }
 
 export { codeToFunction };

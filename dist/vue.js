@@ -51,6 +51,10 @@
         return v !== undefined && v !== null;
     }
 
+    function toString(val) {
+        return val === null ? '' : (typeof val === 'object') ? JSON.stringify(val, null, 2) : String(val);
+    }
+
     // 
 
     let warn = noop;
@@ -129,7 +133,7 @@
         }
         depend() {
             if (Dep.target) {
-                this.target.addDep(this);
+               this.subs.push(Dep.target); 
             }
         }
 
@@ -185,6 +189,11 @@
                 popTarget();
             }
             return value;
+        }
+
+        update(){
+            // debugger;
+            this.getter();
         }
     }
 
@@ -245,14 +254,15 @@
 
     function mountComponent(vm, el) {
         callHook(vm, 'beforeMount');
-        const vnode = vm._render();
+        // console.log(vm._render.toString());
         vm.$el = el;
         function updateComponent() {
+            const vnode = vm._render();
+            console.log(vnode);
             vm._update(vnode);
         }
 
         new Watcher(vm, updateComponent);
-
     }
 
     // 
@@ -347,11 +357,21 @@
         
         
         
-        constructor(tag, children, elm) {
+        
+        constructor(tag, children, elm, text) {
             this.tag = tag;
             this.children = children;
             this.elm = elm;
+            this.text = text;
         }
+    }
+
+    function createTextNode(val) {
+        return new Vnode(undefined, undefined, undefined, String(val));
+    }
+
+    function createEmptyNode() {
+        return new Vnode(undefined, undefined, undefined, '');
     }
 
     // 
@@ -370,7 +390,7 @@
                 vnode = new Vnode(tag, children);
             }
         }
-        return vnode;
+        return vnode ? vnode : createEmptyNode();
     }
 
     // 
@@ -399,7 +419,7 @@
 
 
     function defineReactive(obj, key, val, customSetter) {
-        const dep = new Dep;
+        const dep = new Dep();
 
         const property = Object.getOwnPropertyDescriptor(obj, key);
 
@@ -422,10 +442,11 @@
                 if (Dep.target) {
                     dep.depend();
                 }
-
+                // debugger;
                 return value;
             },
             set: function (newVal) {
+                console.log(newVal);
                 const value = getter ? getter.call(obj) : val;
                 if (value === newVal) {
                     return;
@@ -459,8 +480,10 @@
 
     // 
 
-    function installRenderHelpers(target){
+    function installRenderHelpers(target) {
         target._l = renderList;
+        target._v = createTextNode;
+        target._s = toString;
     }
 
     //  
@@ -491,7 +514,6 @@
             let vnode;
             const { render } = vm.$options;
 
-            // warn(render.toString());
             try {
                 vnode = render.call(this);
             } catch (e) {
@@ -562,10 +584,37 @@
 
     function initData(vm) {
         const data = vm.$options.data;
+        vm._data = data;
+        let keys = Object.keys(data);
+
+        for (let i of keys) {
+
+            // Object.defineProperty(vm, i, data[i]);
+            proxy(vm, '_data', i);
+        }
 
         observe(data);
     }
 
+    function proxy(target, sourceKey, key) {
+        let sharedPropertyDefinition = {
+            enumrable: true,
+            configurable: true,
+            get: noop,
+            set: noop
+        };
+
+        sharedPropertyDefinition.get = function () {
+            // debugger;
+            // console.log('ggggggg');
+            return this[sourceKey][key];
+        };
+        sharedPropertyDefinition.set = function (val) {
+            this[sourceKey][key] = val;
+        };
+
+        Object.defineProperty(target, key, sharedPropertyDefinition);
+    }
 
     function initWatch(vm, watch) {
         for (const key of Object.keys(watch)) {
@@ -660,7 +709,7 @@
     renderMixin(Vue);
 
     const domTools = {
-        createElement: function (tagName) {
+        createElement(tagName) {
             const elm = document.createElement(tagName);
             if (tagName != 'select') {
                 return elm;
@@ -677,6 +726,10 @@
         },
         removeChild(parent, child){
             parent.removeChild(child);
+        },
+        createTextNode(text){
+            const elm = document.createTextNode(text);
+            return elm;
         }
     };
 
@@ -698,7 +751,6 @@
 
     // 
 
-
     function createRealElement(vnode, parentElm, refElm) {
         if (!vnode) {
             return;
@@ -708,11 +760,15 @@
         const tag = vnode.tag;
         if (isDef(tag)) {
             vnode.elm = domTools.createElement(tag);
+        }else if(vnode.expression && vnode.type === 2){
+            vnode.elm = domTools.createTextNode(vnode.expression);
+        }else if(vnode.text){
+            vnode.elm = domTools.createTextNode(vnode.text);
         }
-
         if (children) {
             createChildrenRealElement(vnode, children);
         }
+
         insert(parentElm, vnode.elm, refElm);
     }
 
@@ -725,7 +781,8 @@
     }
 
     function insert(parent, elm, refElm) {
-        if (isDef(parent)) {
+
+        if (isDef(parent) && isDef(elm)) {
             domTools.insertBefore(parent, elm, refElm);
         }
     }
@@ -745,11 +802,11 @@
 
         return function patch(oldVnode, vnode) {
             const isRealElement = x => isDef(x.nodeType);
+
             if (isUndef(oldVnode)) {
                 console.log('没有根');
             } else {
                 if (isRealElement(oldVnode)) {
-                    console.log('real');
                     oldVnode = new Vnode(oldVnode.tagName, [], oldVnode);
                     let parentElm = domTools.parentNode(oldVnode.elm);
                     createRealElement(vnode, parentElm, oldVnode.elm);
@@ -757,6 +814,8 @@
                     if (isDef(parentElm)) {
                         removeVnodes(oldVnode);
                     }
+                }else{
+                    document.write(vm.x);
                 }
             }
         };
@@ -903,6 +962,18 @@
         }
     }
 
+    const defaultExpReg = /\{\{(.)+?\}\}/;
+
+    function parseText(text){
+
+        let match = text.match(defaultExpReg);
+        let expression;
+        if(match){
+            expression = `_s(${match[1].trim()})`;
+        }
+        return {expression};
+    }
+
     // 
 
     function createASTElement(tag, attrs, parent) {
@@ -938,9 +1009,20 @@
 
             text(text) {
                 const children = currentParent.children;
-                if (text) {
+
+                // 提取表达式
+                let { expression } = parseText(text);
+
+                if (expression) {
                     children.push({
                         type: 2,
+                        text,
+                        expression
+                    });
+
+                } else if (text != ' ') {
+                    children.push({
+                        type: 3,
                         text
                     });
                 }
@@ -951,7 +1033,6 @@
                 currentParent = element.parent;
             }
         });
-
         return root;
     }
 
@@ -975,34 +1056,51 @@
         return code;
     }
 
+    function genText(el){
+        let text = '';
+        if(el.type === 2){
+            text =el.expression.trim();
+        }else{
+            text =el.text.trim(); 
+        }
+
+        let code = `_v(${text})`;
+        return code;
+    }
+
     function genChildren(el){
 
         const children = el.children;
 
         if(children && children.length){
-            return `[${children.map(c => genElement(c)).join(',')}]`;
+            return `[${children.map(c => genNode(c)).join(',')}]`;
+        }
+    }
+
+    function genNode(el){
+        if(el.type === 1){
+            return genElement(el);
+        }else if(el.type === 2 || el.type === 3){
+            return genText(el);
         }
     }
 
     // 
 
     function codeToFunction(code) {
-        try {
+        // try {
             return new Function(code);
-        } catch (e) {
-            warn(e);
-            return noop;
-        }
+        // } catch (e) {
+        //     warn(e);
+        //     return noop;
+        // }
     }
 
     // 
 
     function baseCompile(template){
         const ast = parse(template.trim());
-
         const code = generate(ast);
-        console.log(code);
-
         return {
             ast: ast,
             render: codeToFunction(code.render),
@@ -1034,7 +1132,7 @@
             }
             if (template) {
                 const { render, staticRenderFns } = baseCompile(template, {}, this);
-
+                console.log(render.toString());
                 options.render = render;
                 open.staticRenderFns = staticRenderFns;
             }

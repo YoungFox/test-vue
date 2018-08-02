@@ -31,7 +31,6 @@ export function renderMixin(vm: Component) {
         let vnode;
         const { render } = vm.$options;
 
-        // warn(render.toString());
         try {
             vnode = render.call(this);
         } catch (e) {

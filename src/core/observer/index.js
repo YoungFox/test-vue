@@ -27,7 +27,7 @@ export class Observer {
 
 
 export function defineReactive(obj: Object, key: string, val: any, customSetter: Function) {
-    const dep = new Dep;
+    const dep = new Dep();
 
     const property = Object.getOwnPropertyDescriptor(obj, key);
 
@@ -50,10 +50,11 @@ export function defineReactive(obj: Object, key: string, val: any, customSetter:
             if (Dep.target) {
                 dep.depend();
             }
-
+            // debugger;
             return value;
         },
         set: function (newVal) {
+            console.log(newVal);
             const value = getter ? getter.call(obj) : val;
             if (value === newVal) {
                 return;

@@ -57,12 +57,13 @@ export function callHook(vm, hook) {
 
 export function mountComponent(vm, el) {
     callHook(vm, 'beforeMount');
-    const vnode = vm._render();
+    // console.log(vm._render.toString());
     vm.$el = el;
     function updateComponent() {
+        const vnode = vm._render();
+        console.log(vnode);
         vm._update(vnode);
     }
 
     new Watcher(vm, updateComponent);
-
 }

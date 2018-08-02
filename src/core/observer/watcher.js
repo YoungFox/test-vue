@@ -31,4 +31,9 @@ export default class Watcher {
         }
         return value;
     }
+
+    update(){
+        // debugger;
+        this.getter();
+    }
 }

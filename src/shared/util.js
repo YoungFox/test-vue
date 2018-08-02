@@ -43,3 +43,7 @@ export function isUndef(v: any): boolean {
 export function isDef(v: any): boolean {
     return v !== undefined && v !== null;
 }
+
+export function toString(val) {
+    return val === null ? '' : (typeof val === 'object') ? JSON.stringify(val, null, 2) : String(val);
+}

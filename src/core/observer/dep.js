@@ -7,7 +7,7 @@ export default class Dep {
     }
     depend() {
         if (Dep.target) {
-            this.target.addDep(this);
+           this.subs.push(Dep.target); 
         }
     }
 

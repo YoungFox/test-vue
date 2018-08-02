@@ -28,7 +28,7 @@ Vue.prototype.$mount = function (el, hydrating): Component {
         }
         if (template) {
             const { render, staticRenderFns } = compileToFuntions(template, {}, this);
-
+            console.log(render.toString());
             options.render = render;
             open.staticRenderFns = staticRenderFns;
         }

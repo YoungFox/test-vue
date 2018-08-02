@@ -1,6 +1,6 @@
 
 export const domTools = {
-    createElement: function (tagName) {
+    createElement(tagName) {
         const elm = document.createElement(tagName);
         if (tagName != 'select') {
             return elm;
@@ -17,5 +17,9 @@ export const domTools = {
     },
     removeChild(parent, child){
         parent.removeChild(child);
+    },
+    createTextNode(text){
+        const elm = document.createTextNode(text);
+        return elm;
     }
 };
