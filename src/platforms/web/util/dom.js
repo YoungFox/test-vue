@@ -21,5 +21,12 @@ export const domTools = {
     createTextNode(text){
         const elm = document.createTextNode(text);
         return elm;
+    },
+    setTextContent(node, text){
+        //textContent 不会触发重排，厉害
+        node.textContent = text;
+    },
+    nextSibling(node){
+        return node.nextSibling();
     }
 };

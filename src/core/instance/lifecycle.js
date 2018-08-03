@@ -35,6 +35,8 @@ export function lifecycleMixin(Vue) {
         // 
         if (!prevVnode) {
             vm.$el = vm.__patch__(vm.$el, vnode);
+        }else{
+            vm.$el = vm.__patch__(prevVnode, vnode);
         }
     };
 }
