@@ -65,7 +65,9 @@ function patchVnode(oldVnode, vnode) {
             updateChildren(elm, oldCh, ch);
         }
     } else {
-        domTools.setTextContent(elm, vnode.text);
+        if (isDef(elm)){
+            domTools.setTextContent(elm, vnode.text);
+        }
     }
 
 

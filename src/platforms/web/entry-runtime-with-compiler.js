@@ -5,7 +5,6 @@ import { query } from './util/index';
 import { warn } from 'util/index';
 import compileToFuntions from './compiler/index';
 
-
 export default Vue;
 
 const mount = Vue.prototype.$mount;

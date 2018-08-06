@@ -160,40 +160,51 @@
 
     // 
 
+    function getValueFunction(x){
+        return function(obj){
+            return obj[x];
+        }
+    }
+
     class Watcher {
         
         
         
         constructor(vm, expOrFn, cb) {
             this.vm = vm;
+            this.cb = cb;
             vm._watchers.push(this);
 
             if (typeof expOrFn === 'function') {
                 this.getter = expOrFn;
             } else {
-                this.getter = expOrFn;
+                this.getter = getValueFunction(expOrFn);
             }
-
             this.value = this.get();
         }
 
-        get(){
+        get() {
             pushTarget(this);
             const vm = this.vm;
             let value;
-            try{
-                value = this.getter();
-            }catch(e){
+            try {
+                value = this.getter.call(vm, vm);
+                // debugger;
+            } catch (e) {
                 console.log(e);
-            }finally{
+            } finally {
                 popTarget();
             }
             return value;
         }
 
-        update(){
+        update() {
             // debugger;
-            this.getter();
+            const vm = this.vm;
+            if(this.cb){
+                this.cb();
+            }
+            this.getter.call(vm, vm);
         }
     }
 
@@ -260,7 +271,7 @@
         vm.$el = el;
         function updateComponent() {
             const vnode = vm._render();
-            console.log(vnode);
+            // console.log(vnode);
             vm._update(vnode);
         }
 
@@ -320,7 +331,7 @@
         }
     }
 
-    function remove(event,fn){
+    function remove(event, fn) {
         target.$remove(event, fn);
     }
 
@@ -631,6 +642,12 @@
 
     // placeholder Watcher
 
+    function stateMixin(Vue) {
+        Vue.prototype.$watch = function (expOrFn, handler) {
+            new Watcher(this, expOrFn, handler);
+        };
+    }
+
     const inBrowser = typeof window !== 'undefined';
 
     let mark;
@@ -709,6 +726,7 @@
     initMixin(Vue);
     lifecycleMixin(Vue);
     renderMixin(Vue);
+    stateMixin(Vue);
 
     const domTools = {
         createElement(tagName) {
@@ -822,7 +840,9 @@
                 updateChildren(elm, oldCh, ch);
             }
         } else {
-            domTools.setTextContent(elm, vnode.text);
+            if (isDef(elm)){
+                domTools.setTextContent(elm, vnode.text);
+            }
         }
 
 

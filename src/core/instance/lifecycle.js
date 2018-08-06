@@ -63,7 +63,7 @@ export function mountComponent(vm, el) {
     vm.$el = el;
     function updateComponent() {
         const vnode = vm._render();
-        console.log(vnode);
+        // console.log(vnode);
         vm._update(vnode);
     }
 

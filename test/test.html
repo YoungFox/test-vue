@@ -25,7 +25,8 @@
 			'beforeCreate': [function () { console.log('beforeCreate'); }],
 			'created': ["function () { console.log('created'); }"],
 			'props': { a: '1234' },
-			'methods': { $mb: function () { console.log(this._props.a) } }
+			'methods': { $mb: function () { console.log(this._props.a) } },
+			'watch': {x: function (){console.log('改变x')}}
 		});
 		// console.log(new Vue() instanceof Vue);
 		// console.log(Vue);

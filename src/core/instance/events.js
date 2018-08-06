@@ -1,6 +1,6 @@
 // @flow
 
-import {updateListeners} from '../vdom/helpers/index';
+import { updateListeners } from '../vdom/helpers/index';
 
 export function initEvents(vm: Component) {
     vm._events = Object.create(null);
@@ -22,7 +22,7 @@ function add(event: string, fn: Function, once: boolean) {
     }
 }
 
-function remove(event: string,fn: Function){
+function remove(event: string, fn: Function) {
     target.$remove(event, fn);
 }
 

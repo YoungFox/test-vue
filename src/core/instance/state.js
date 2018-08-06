@@ -106,3 +106,9 @@ function createWatcher(vm, expOrFn, handler) {
 }
 
 // placeholder Watcher
+
+export function stateMixin(Vue) {
+    Vue.prototype.$watch = function (expOrFn, handler) {
+        new Watcher(this, expOrFn, handler);
+    };
+}
