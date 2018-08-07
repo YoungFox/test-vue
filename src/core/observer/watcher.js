@@ -1,10 +1,10 @@
 // @flow
 import Dep, { pushTarget, popTarget } from './dep';
 
-function getValueFunction(x){
-    return function(obj){
+function getValueFunction(x): Function {
+    return function (obj): Object {
         return obj[x];
-    }
+    };
 }
 
 export default class Watcher {
@@ -42,8 +42,8 @@ export default class Watcher {
     update() {
         // debugger;
         const vm = this.vm;
-        if(this.cb){
-            this.cb();
+        if (this.cb) {
+            this.cb.call(vm, vm);
         }
         this.getter.call(vm, vm);
     }

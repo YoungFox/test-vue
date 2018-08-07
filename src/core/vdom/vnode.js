@@ -13,7 +13,11 @@ export default class Vnode {
 }
 
 export function createTextNode(val: string): Vnode {
-    return new Vnode(undefined, undefined, undefined, String(val));
+    if(val){
+        return new Vnode(undefined, undefined, undefined, String(val));
+    }else{
+        return createEmptyNode();
+    }
 }
 
 export function createEmptyNode() {

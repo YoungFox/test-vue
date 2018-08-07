@@ -160,10 +160,10 @@
 
     // 
 
-    function getValueFunction(x){
-        return function(obj){
+    function getValueFunction(x) {
+        return function (obj) {
             return obj[x];
-        }
+        };
     }
 
     class Watcher {
@@ -201,8 +201,8 @@
         update() {
             // debugger;
             const vm = this.vm;
-            if(this.cb){
-                this.cb();
+            if (this.cb) {
+                this.cb.call(vm, vm);
             }
             this.getter.call(vm, vm);
         }
@@ -380,7 +380,11 @@
     }
 
     function createTextNode(val) {
-        return new Vnode(undefined, undefined, undefined, String(val));
+        if(val){
+            return new Vnode(undefined, undefined, undefined, String(val));
+        }else{
+            return createEmptyNode();
+        }
     }
 
     function createEmptyNode() {
@@ -1216,6 +1220,7 @@
     function baseCompile(template){
         const ast = parse(template.trim());
         const code = generate(ast);
+        console.log(code.toString());
         return {
             ast: ast,
             render: codeToFunction(code.render),

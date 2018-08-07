@@ -8,25 +8,22 @@
 </head>
 
 <body>
-	<div id="app" class="app//">1234
+	<div id="app" class="app//">
+		1234
 		<div>{{x}}</div>
-		<abs>1111</abs>
-		<div>999</div>
-		<div>999</div>
-		<div>999</div>
-		<div>999</div>
+
 		<div>999</div>
 	</div>
 	<script>
 		var vm = new Vue({
 			el: '#app',
 			a: 1111,
-			data: {x: 888},
+			data: { x: 888 },
 			'beforeCreate': [function () { console.log('beforeCreate'); }],
 			'created': ["function () { console.log('created'); }"],
 			'props': { a: '1234' },
 			'methods': { $mb: function () { console.log(this._props.a) } },
-			'watch': {x: function (){console.log('改变x')}}
+			'watch': { x: function (vm) { console.log('改变x为：' + vm.x) } }
 		});
 		// console.log(new Vue() instanceof Vue);
 		// console.log(Vue);
