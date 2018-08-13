@@ -2,6 +2,7 @@
 import { isUndef, isDef } from 'shared/util';
 import { domTools } from 'platforms/web/util/index';
 import Vnode from 'core/vdom/vnode';
+import { updateListeners } from './helpers/index';
 
 export function createRealElement(vnode, parentElm, refElm) {
     if (!vnode) {
@@ -17,6 +18,10 @@ export function createRealElement(vnode, parentElm, refElm) {
     } else if (vnode.text) {
         vnode.elm = domTools.createTextNode(vnode.text);
     }
+    if(vnode.data && vnode.data.on){
+        updateListeners(vnode.elm,vnode.data.on);
+    }
+
     if (children) {
         createChildrenRealElement(vnode, children);
     }
@@ -146,7 +151,7 @@ export function createPatchFunction(): any {
                 patchVnode(oldVnode, vnode);
             } else {
                 if (isRealElement(oldVnode)) {
-                    oldVnode = new Vnode(oldVnode.tagName, [], oldVnode);
+                    oldVnode = new Vnode(oldVnode.tagName,{}, [], oldVnode);
 
                 }
 

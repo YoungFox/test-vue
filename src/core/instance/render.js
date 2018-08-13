@@ -13,7 +13,7 @@ export function initRender(vm: Component) {
     const parentVnode = vm.$vnode = options._parentVnode;
     const renderContext = parentVnode && parentVnode.context;
     // createElement();
-    vm._c = (tag, children) => createElement(vm, tag, children);
+    vm._c = (tag, data, children) => createElement(vm, tag, data, children);
 
 
     defineReactive(vm, '$attr', emptyObject, function () {

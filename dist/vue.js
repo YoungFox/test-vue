@@ -239,7 +239,7 @@
             const vm = this;
             const prevVnode = vm._vnode;
             vm._vnode = vnode;
-
+            console.log(vnode);
             // 
             if (!prevVnode) {
                 vm.$el = vm.__patch__(vm.$el, vnode);
@@ -296,16 +296,20 @@
         };
     };
 
-    function updateListeners(on, oldOn, add, remove, vm) {
-        let name, def, cur, old, event;
+    function add(target, event, handler) {
+        target.addEventListener(event, handler);
+    }
 
+
+    function updateListeners(target, on, oldOn) {
+        let name, def, cur, event;
         for (name in on) {
             def = cur = on[name];
-            old = oldOn[name];
+            // old = oldOn[name];
 
             event = normalizeEvent(name);
 
-            add(event.name, cur, event.once, event.capture, event.passive, event.params);
+            add(target, event.name, cur, event.once, event.capture, event.passive, event.params);
         }
     }
 
@@ -323,7 +327,7 @@
     }
     let target;
 
-    function add(event, fn, once) {
+    function add$1(event, fn, once) {
         if (once) {
             target.$once(event, fn);
         } else {
@@ -337,7 +341,7 @@
 
     function updateComponentListeners(vm, listeners) {
         target = vm;
-        updateListeners(listeners, {}, add, remove, vm);
+        updateListeners(listeners, {}, add$1, remove, vm);
         target = undefined;
     }
 
@@ -371,8 +375,10 @@
         
         
         
-        constructor(tag, children, elm, text) {
+        
+        constructor(tag, data, children, elm, text) {
             this.tag = tag;
+            this.data = data;
             this.children = children;
             this.elm = elm;
             this.text = text;
@@ -380,31 +386,31 @@
     }
 
     function createTextNode(val) {
-        if(val){
-            return new Vnode(undefined, undefined, undefined, String(val));
-        }else{
+        if (val) {
+            return new Vnode(undefined, undefined, undefined, undefined, String(val));
+        } else {
             return createEmptyNode();
         }
     }
 
     function createEmptyNode() {
-        return new Vnode(undefined, undefined, undefined, '');
+        return new Vnode(undefined, undefined, undefined, undefined, '');
     }
 
     // 
 
-    function createElement(context, tag, children) {
-        return _createElement(undefined, tag, children);
+    function createElement(context, tag, data, children) {
+        return _createElement(undefined, tag, data, children);
     }
 
-    function _createElement(context, tag, children) {
+    function _createElement(context, tag, data, children) {
 
 
         let vnode;
 
         if (typeof tag === 'string') {
             if (isReservedTag(tag)) {
-                vnode = new Vnode(tag, children);
+                vnode = new Vnode(tag, data, children);
             }
         }
         return vnode ? vnode : createEmptyNode();
@@ -513,7 +519,7 @@
         const parentVnode = vm.$vnode = options._parentVnode;
         const renderContext = parentVnode && parentVnode.context;
         // createElement();
-        vm._c = (tag, children) => createElement(vm, tag, children);
+        vm._c = (tag, data, children) => createElement(vm, tag, data, children);
 
 
         defineReactive(vm, '$attr', emptyObject, function () {
@@ -796,6 +802,10 @@
         } else if (vnode.text) {
             vnode.elm = domTools.createTextNode(vnode.text);
         }
+        if(vnode.data && vnode.data.on){
+            updateListeners(vnode.elm,vnode.data.on);
+        }
+
         if (children) {
             createChildrenRealElement(vnode, children);
         }
@@ -925,7 +935,7 @@
                     patchVnode(oldVnode, vnode);
                 } else {
                     if (isRealElement(oldVnode)) {
-                        oldVnode = new Vnode(oldVnode.tagName, [], oldVnode);
+                        oldVnode = new Vnode(oldVnode.tagName,{}, [], oldVnode);
 
                     }
 
@@ -959,7 +969,8 @@
 
     const isPlainTextElement = makeMap('script,style,textarea', true);
 
-    const attribute = /^.+?(?=\/?>)/;
+    // const attribute = /^.+?(?=\/?>)/;
+    const attribute = /^\s+([^\s'"\/<>]+)(?:\s*=\s*)(?:"([^"<>]+)"|'([^'<>]+)'|([^\s<>]+))/;
 
     const ncname = '[a-zA-Z_][\\w\\-\\.]*';
     const qnameCapture = `((?:${ncname}\\:)?${ncname})`;
@@ -997,7 +1008,7 @@
                     text = html.substring(0, textEnd);
                     advance(textEnd);
 
-                    if(text && options.text){
+                    if (text && options.text) {
                         options.text(text);
                     }
                 }
@@ -1024,6 +1035,9 @@
 
                 while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
                     advance(attr[0].length);
+                    if (attr) {
+                        match.attrs.push(attr);
+                    }
                 }
 
                 if (end) {
@@ -1038,8 +1052,21 @@
             let tagName = match.tagName;
             stack.push({ tagName });
 
+            let l = match.attrs.length;
+
+            let attrs = new Array(l);
+
+            for (let i = 0; i < l; i++) {
+                let attr = match.attrs[i];
+                let value = attr[2] || attr[3] || attr[4] || '';
+                attrs[i] = {
+                    name: attr[1],
+                    value : value
+                };
+            }
+
             if (options.start) {
-                options.start(tagName);
+                options.start(tagName, attrs);
             }
 
         }
@@ -1075,7 +1102,7 @@
             stack.length = pos;
             // lastTag = pos && stack[pos - 1];
 
-            if(options.end){
+            if (options.end) {
                 options.end();
             }
         }
@@ -1093,7 +1120,16 @@
         return {expression};
     }
 
+    function addHandler(el, name, value){
+        let events = el.events || (el.events = {});
+
+        events[name] = value;
+        el.plain = false;
+    }
+
     // 
+    const onReg = /^@|^v-on:/;
+
 
     function createASTElement(tag, attrs, parent) {
         return {
@@ -1105,14 +1141,25 @@
         };
     }
 
+    function processAttrs(el) {
+        let list = el.attrsList;
+
+        for (let i of list) {
+            let match = i.name.match(onReg);
+            if (match) {
+                addHandler(el, i.name.replace(match[0],''), i.value);
+            }
+        }
+    }
+
     function parse(template) {
         const stack = [];
         let currentParent = null;
         let root;
 
         parseHTML(template, {
-            start(tag) {
-                let element = createASTElement(tag);
+            start(tag, attrs) {
+                let element = createASTElement(tag, attrs);
                 if (!root) {
                     root = element;
                 }
@@ -1121,7 +1168,7 @@
                     currentParent.children.push(element);
                     element.parent = currentParent;
                 }
-
+                processAttrs(element);
                 currentParent = element;
                 stack.push(element);
             },
@@ -1155,8 +1202,22 @@
         return root;
     }
 
+    function genHandlers(events) {
+        let data = `'on':{`;
+        for (let i in events) {
+            data += genHandler(i, events[i]);
+        }
+        data += '}';
+        return data;
+    }
+
+    function genHandler(name, value) {
+
+        return `'${name}':${value},`;
+    }
+
     // 
-    function generate(ast){
+    function generate(ast) {
         const code = ast ? genElement(ast) : '_c("div")';
 
         return {
@@ -1164,44 +1225,62 @@
         };
     }
 
-    function genElement(el){
+    function genElement(el) {
 
         let code;
 
         const children = genChildren(el);
-        
-        code = `_c('${el.tag}',${children})`;
+
+        let data = genData(el);
+
+        code = `_c('${el.tag}' , ${data},${children})`;
 
         return code;
     }
 
-    function genText(el){
+    function genText(el) {
         let text = '';
-        if(el.type === 2){
-            text =el.expression.trim();
-        }else{
-            text =el.text.trim(); 
+        if (el.type === 2) {
+            text = el.expression.trim();
+        } else {
+            text = el.text.trim();
         }
 
         let code = `_v(${text})`;
         return code;
     }
 
-    function genChildren(el){
+    function genChildren(el) {
 
         const children = el.children;
 
-        if(children && children.length){
+        if (children && children.length) {
             return `[${children.map(c => genNode(c)).join(',')}]`;
         }
     }
 
-    function genNode(el){
-        if(el.type === 1){
+    function genNode(el) {
+        if (el.type === 1) {
             return genElement(el);
-        }else if(el.type === 2 || el.type === 3){
+        } else if (el.type === 2 || el.type === 3) {
             return genText(el);
         }
+    }
+
+
+    function genData(el) {
+        let data = '{';
+        // if (el.attrsList) {
+        //     Object.assign(data, el.attrsList);
+        // }
+
+        if(el.events){
+            data += genHandlers(el.events);
+            // Object.assign(data,genHandlers(el.events));
+        }
+
+        data += '}';
+        return data;
     }
 
     // 
@@ -1220,7 +1299,6 @@
     function baseCompile(template){
         const ast = parse(template.trim());
         const code = generate(ast);
-        console.log(code.toString());
         return {
             ast: ast,
             render: codeToFunction(code.render),

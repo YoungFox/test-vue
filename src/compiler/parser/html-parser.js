@@ -3,7 +3,8 @@ import { makeMap } from 'shared/util';
 
 const isPlainTextElement = makeMap('script,style,textarea', true);
 
-const attribute = /^.+?(?=\/?>)/;
+// const attribute = /^.+?(?=\/?>)/;
+const attribute = /^\s+([^\s'"\/<>]+)(?:\s*=\s*)(?:"([^"<>]+)"|'([^'<>]+)'|([^\s<>]+))/;
 
 const ncname = '[a-zA-Z_][\\w\\-\\.]*';
 const qnameCapture = `((?:${ncname}\\:)?${ncname})`;
@@ -41,7 +42,7 @@ export function parseHTML(html: string, options: Object) {
                 text = html.substring(0, textEnd);
                 advance(textEnd);
 
-                if(text && options.text){
+                if (text && options.text) {
                     options.text(text);
                 }
             }
@@ -68,6 +69,9 @@ export function parseHTML(html: string, options: Object) {
 
             while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
                 advance(attr[0].length);
+                if (attr) {
+                    match.attrs.push(attr);
+                }
             }
 
             if (end) {
@@ -83,8 +87,21 @@ export function parseHTML(html: string, options: Object) {
         stack.push({ tagName });
         lastTag = tagName;
 
+        let l = match.attrs.length;
+
+        let attrs = new Array(l);
+
+        for (let i = 0; i < l; i++) {
+            let attr = match.attrs[i];
+            let value = attr[2] || attr[3] || attr[4] || '';
+            attrs[i] = {
+                name: attr[1],
+                value : value
+            };
+        }
+
         if (options.start) {
-            options.start(tagName);
+            options.start(tagName, attrs);
         }
 
     }
@@ -120,7 +137,7 @@ export function parseHTML(html: string, options: Object) {
         stack.length = pos;
         // lastTag = pos && stack[pos - 1];
 
-        if(options.end){
+        if (options.end) {
             options.end();
         }
     }

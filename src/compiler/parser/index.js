@@ -1,6 +1,9 @@
 // @flow
 import { parseHTML } from './html-parser';
 import { parseText } from './text-parser';
+import { addHandler } from '../helpers';
+const onReg = /^@|^v-on:/;
+
 
 export function createASTElement(tag: string, attrs: Array<any>, parent: ASTElement): ASTElement {
     return {
@@ -12,14 +15,25 @@ export function createASTElement(tag: string, attrs: Array<any>, parent: ASTElem
     };
 }
 
+function processAttrs(el) {
+    let list = el.attrsList;
+
+    for (let i of list) {
+        let match = i.name.match(onReg);
+        if (match) {
+            addHandler(el, i.name.replace(match[0],''), i.value);
+        }
+    }
+}
+
 export function parse(template): any {
     const stack = [];
     let currentParent = null;
     let root;
 
     parseHTML(template, {
-        start(tag) {
-            let element = createASTElement(tag);
+        start(tag, attrs) {
+            let element = createASTElement(tag, attrs);
             if (!root) {
                 root = element;
             }
@@ -28,7 +42,7 @@ export function parse(template): any {
                 currentParent.children.push(element);
                 element.parent = currentParent;
             }
-
+            processAttrs(element);
             currentParent = element;
             stack.push(element);
         },
