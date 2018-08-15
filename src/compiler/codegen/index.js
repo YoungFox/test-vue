@@ -53,9 +53,10 @@ function genNode(el) {
 
 function genData(el) {
     let data = '{';
-    // if (el.attrsList) {
-    //     Object.assign(data, el.attrsList);
-    // }
+    if (el.attrsList) {
+        // Object.assign(data, el.attrsList);
+        // data += JSON.stringify(el.attrsList);
+    }
 
     if(el.events){
         data += genHandlers(el.events);

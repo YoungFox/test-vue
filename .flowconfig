@@ -1,7 +1,10 @@
 [ignore]
 .*/dist/.*
+.*/node_modules/.*
+.*/test/.*
+.*/scripts/.*
 [include]
 
 [libs]
-
+flow
 [options]

@@ -96,7 +96,7 @@ export function parseHTML(html: string, options: Object) {
             let value = attr[2] || attr[3] || attr[4] || '';
             attrs[i] = {
                 name: attr[1],
-                value : value
+                value: value
             };
         }
 
