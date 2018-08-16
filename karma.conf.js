@@ -1,5 +1,29 @@
 // Karma configuration
-// Generated on Wed Aug 15 2018 19:16:48 GMT+0800 (CST)
+// Generated on Thu Aug 16 2018 14:34:56 GMT+0800 (CST)
+var alias = require('./scripts/alias-default');
+var webpack = require('webpack');
+
+var webpackConfig = {
+  resolve: {
+    alias: alias
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        exclude: /node_modules/
+      }
+    ]
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: '"development"'
+      }
+    })
+  ]
+};
 
 module.exports = function(config) {
   config.set({
@@ -15,6 +39,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      './test/unit/x.js'
     ],
 
 
@@ -26,8 +51,29 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      './test/unit/x.js': ['webpack']
     },
 
+
+    webpack: webpackConfig
+      // karma watches the test entry points
+      // (you don't need to specify the entry option)
+      // webpack watches dependencies
+
+      // webpack configuration
+    ,
+
+    webpackMiddleware: {
+      // webpack-dev-middleware configuration
+      // i. e.
+      stats: 'errors-only'
+    },
+
+    plugins: [
+      'karma-webpack',
+      'karma-jasmine',
+      'karma-chrome-launcher'
+    ],
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
