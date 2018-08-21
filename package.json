@@ -42,5 +42,8 @@
   },
   "dependencies": {
     "babel-loader": "^7.1.5"
-  }
+  },
+  "eslintIgnore": [
+    "./test/unit/x.js"
+  ]
 }
