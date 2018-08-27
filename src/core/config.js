@@ -1,3 +1,4 @@
 export default {
-    optionMergeStrategies : Object.create(null)
+    optionMergeStrategies : Object.create(null),
+    perfomance: true
 };

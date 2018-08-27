@@ -23,15 +23,19 @@ const normalizeEvent = (name: string): {
     };
 };
 
-export function updateListeners(on: Object, oldOn: Object, add: Function, remove: Function, vm: Component) {
-    let name, def, cur, old, event;
+function add(target, event, handler) {
+    target.addEventListener(event, handler);
+}
 
+
+export function updateListeners(target, on: Object, oldOn: Object) {
+    let name, def, cur, old, event;
     for (name in on) {
         def = cur = on[name];
-        old = oldOn[name];
+        // old = oldOn[name];
 
         event = normalizeEvent(name);
 
-        add(event.name, cur, event.once, event.capture, event.passive, event.params);
+        add(target, event.name, cur, event.once, event.capture, event.passive, event.params);
     }
 }

@@ -8,12 +8,23 @@
 </head>
 
 <body>
+	<div id="app" class=>
+		1234
+		<div v-on:click="change">{{x}}</div>
+		<div>999</div>
+	</div>
 	<script>
-		var vue = new Vue({
+		var vm = new Vue({
+			el: '#app',
 			a: 1111,
+			data: { x: 888 },
 			'beforeCreate': [function () { console.log('beforeCreate'); }],
 			'created': ["function () { console.log('created'); }"],
-			'props':{a:'1234'}
+			'props': { a: '1234' },
+			'methods': { $mb: function () { console.log(this._props.a) },change: function (){
+				console.log('change');
+			} },
+			'watch': { x: function (vm) { console.log('改变x为：' + vm.x) } }
 		});
 		// console.log(new Vue() instanceof Vue);
 		// console.log(Vue);

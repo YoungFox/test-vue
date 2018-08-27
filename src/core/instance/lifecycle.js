@@ -1,5 +1,6 @@
 // @flow
-import {logError} from '../util/error';
+import { logError } from '../util/error';
+import Watcher from '../observer/watcher';
 
 export function initLifecycle(vm: Component) {
     let options = vm.$options;
@@ -25,18 +26,46 @@ export function initLifecycle(vm: Component) {
     vm._isBeginDestroyed = false;
 }
 
-export function callHook(vm, hook){
+export function lifecycleMixin(Vue) {
+    Vue.prototype._update = function (vnode) {
+        const vm = this;
+        const prevVnode = vm._vnode;
+        vm._vnode = vnode;
+        console.log(vnode);
+        // 
+        if (!prevVnode) {
+            vm.$el = vm.__patch__(vm.$el, vnode);
+        }else{
+            vm.$el = vm.__patch__(prevVnode, vnode);
+        }
+    };
+}
+
+export function callHook(vm, hook) {
     const handlers = vm.$options[hook];
-    if(handlers){
+    if (handlers) {
         let h;
-        for(h of handlers.values()){
-            try{
+        for (h of handlers.values()) {
+            try {
                 h.call(vm);
-            }catch(e){
+            } catch (e) {
                 // console.log(e);
                 logError(e, vm, `${hook} hook`);
             }
         }
     }
     // debugger;
+}
+
+export function mountComponent(vm, el) {
+    callHook(vm, 'beforeMount');
+    // console.log(vm._render.toString());
+    vm.$el = el;
+    function updateComponent() {
+        const vnode = vm._render();
+        // console.log(vnode);
+        vm._update(vnode);
+    }
+
+    new Watcher(vm, updateComponent);
 }

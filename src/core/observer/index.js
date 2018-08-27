@@ -1,8 +1,33 @@
 // @flow
 import Dep from './dep';
 
+import { def } from '../util/index';
+
+
+export class Observer {
+    value: any;
+
+    constructor(value) {
+        this.value = value;
+        this.dep = new Dep();
+        def(value, '__ob__', this);
+
+        this.walk(value);
+    }
+
+    walk(obj: Object) {
+        const keys = Object.keys(obj);
+
+        for (let k of keys) {
+            defineReactive(obj, k);
+        }
+    }
+}
+
+
+
 export function defineReactive(obj: Object, key: string, val: any, customSetter: Function) {
-    const dep = new Dep;
+    const dep = new Dep();
 
     const property = Object.getOwnPropertyDescriptor(obj, key);
 
@@ -13,6 +38,10 @@ export function defineReactive(obj: Object, key: string, val: any, customSetter:
     const getter = property && property.get;
     const setter = property && property.set;
 
+    if ((!getter || setter) && arguments.length === 2) {
+        val = obj[key];
+    }
+
     Object.defineProperty(obj, key, {
         enumerable: true,
         configurable: true,
@@ -21,10 +50,11 @@ export function defineReactive(obj: Object, key: string, val: any, customSetter:
             if (Dep.target) {
                 dep.depend();
             }
-            
+            // debugger;
             return value;
         },
         set: function (newVal) {
+            console.log(newVal);
             const value = getter ? getter.call(obj) : val;
             if (value === newVal) {
                 return;
@@ -43,4 +73,11 @@ export function defineReactive(obj: Object, key: string, val: any, customSetter:
             dep.notify();
         }
     });
+}
+
+
+export function observe(value) {
+    let ob;
+    ob = new Observer(value);
+    return ob;
 }

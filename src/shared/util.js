@@ -13,9 +13,37 @@ export function makeMap(str: string, toLowerCase: boolean): Function {
 
     let list = str.split(',');
 
-    list.map(val => map[val] = true);
+    list.map((val: any): any => map[val] = true);
 
-    return toLowerCase ? key => map[key.toLowerCase()] : key => map[key];
+    return toLowerCase ? (key: any): any => map[key.toLowerCase()] : (key: any): any => map[key];
 }
 
 export const emptyObject = Object.freeze({});
+
+function nativeBind(fn: Function, ctx: Object): Function {
+    return fn.bind(ctx);
+}
+
+function polyfillBind(fn: Function, ctx: Object): Function {
+    function boundFn(a: any): any {
+        const l = arguments.length;
+        return l ? l > 1 ? fn.apply(ctx, arguments) : fn.call(ctx, a) : fn.call(ctx);
+    }
+
+    return boundFn;
+}
+
+export const bind = Function.prototype.bind ? nativeBind : polyfillBind;
+
+
+export function isUndef(v: any): boolean {
+    return v === undefined || v === null;
+}
+
+export function isDef(v: any): boolean {
+    return v !== undefined && v !== null;
+}
+
+export function toString(val) {
+    return val === null ? '' : (typeof val === 'object') ? JSON.stringify(val, null, 2) : String(val);
+}
